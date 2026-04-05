@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, ArrowRight } from "lucide-react";
+import { Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 interface LoginScreenProps {
   onLogin: (sheetId: string) => void;
@@ -13,6 +13,7 @@ const DEFAULT_SHEET_ID = "1p8dGFb-qsIEEmW3ApWyosx3TZsBsGFzd";
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [sheetId, setSheetId] = useState(DEFAULT_SHEET_ID);
   const [error, setError] = useState("");
 
@@ -56,14 +57,23 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="password" className="text-muted-foreground">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="bg-secondary border-border"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="bg-secondary border-border pr-10"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             {error && (
