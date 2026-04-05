@@ -111,7 +111,7 @@ function extractSummaryCards(headers: string[], rows: string[][]) {
   return cards;
 }
 
-function extractChartData(headers: string[], rows: string[]) {
+function extractChartData(headers: string[], rows: string[][]) {
   // Try to build annual chart data from rows
   if (rows.length < 2) return [];
   
