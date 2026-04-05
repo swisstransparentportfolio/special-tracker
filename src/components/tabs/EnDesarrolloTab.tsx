@@ -8,13 +8,15 @@ interface Props {
 }
 
 const TYPE_CONFIG: Record<string, { icon: typeof FileText; color: string; bg: string }> = {
-  "tesis": { icon: Search, color: "text-purple-400", bg: "bg-purple-400/15 border-purple-400/30" },
-  "artículo": { icon: FileText, color: "text-primary", bg: "bg-primary/15 border-primary/30" },
-  "articulo": { icon: FileText, color: "text-primary", bg: "bg-primary/15 border-primary/30" },
-  "investigación": { icon: Lightbulb, color: "text-emerald-400", bg: "bg-emerald-400/15 border-emerald-400/30" },
-  "investigacion": { icon: Lightbulb, color: "text-emerald-400", bg: "bg-emerald-400/15 border-emerald-400/30" },
-  "modelo financiero": { icon: BarChart3, color: "text-blue-400", bg: "bg-blue-400/15 border-blue-400/30" },
-  "modelo": { icon: BarChart3, color: "text-blue-400", bg: "bg-blue-400/15 border-blue-400/30" },
+  "tesis": { icon: Search, color: "text-muted-foreground", bg: "bg-secondary border-border" },
+  "thesis": { icon: Search, color: "text-muted-foreground", bg: "bg-secondary border-border" },
+  "artículo": { icon: FileText, color: "text-primary", bg: "bg-primary/10 border-primary/30" },
+  "articulo": { icon: FileText, color: "text-primary", bg: "bg-primary/10 border-primary/30" },
+  "article": { icon: FileText, color: "text-primary", bg: "bg-primary/10 border-primary/30" },
+  "investigación": { icon: Lightbulb, color: "text-success", bg: "bg-success/10 border-success/30" },
+  "research": { icon: Lightbulb, color: "text-success", bg: "bg-success/10 border-success/30" },
+  "modelo financiero": { icon: BarChart3, color: "text-muted-foreground", bg: "bg-secondary border-border" },
+  "financial model": { icon: BarChart3, color: "text-muted-foreground", bg: "bg-secondary border-border" },
 };
 
 export default function EnDesarrolloTab({ data, loading }: Props) {
@@ -22,18 +24,17 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
   if (!data || data.rows.length === 0) {
     return (
       <Card className="flex h-64 items-center justify-center border-border bg-card">
-        <p className="text-muted-foreground">No se encontró la hoja "En desarrollo"</p>
+        <p className="text-muted-foreground">No "Pipeline" sheet found</p>
       </Card>
     );
   }
 
   const { headers, rows } = data;
-  const titleIdx = getColIdx(headers, "título") !== -1 ? getColIdx(headers, "título") : getColIdx(headers, "titulo") !== -1 ? getColIdx(headers, "titulo") : 0;
-  const typeIdx = getColIdx(headers, "tipo");
-  const dateIdx = getColIdx(headers, "fecha");
-  const statusIdx = getColIdx(headers, "estado");
+  const titleIdx = getColIdx(headers, "título") !== -1 ? getColIdx(headers, "título") : getColIdx(headers, "titulo") !== -1 ? getColIdx(headers, "titulo") : getColIdx(headers, "title") !== -1 ? getColIdx(headers, "title") : 0;
+  const typeIdx = getColIdx(headers, "tipo") !== -1 ? getColIdx(headers, "tipo") : getColIdx(headers, "type");
+  const dateIdx = getColIdx(headers, "fecha") !== -1 ? getColIdx(headers, "fecha") : getColIdx(headers, "date");
+  const statusIdx = getColIdx(headers, "estado") !== -1 ? getColIdx(headers, "estado") : getColIdx(headers, "status");
 
-  // Count by type
   const typeCounts: Record<string, number> = {};
   rows.forEach(r => {
     const t = typeIdx !== -1 ? r[typeIdx]?.toLowerCase().trim() : "";
@@ -42,11 +43,10 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
 
   return (
     <div className="animate-fade-in space-y-6">
-      {/* Summary badges */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm font-medium text-foreground">{rows.length} publicaciones en preparación</span>
+        <span className="text-sm font-medium text-foreground">{rows.length} publications in progress</span>
         {Object.entries(typeCounts).map(([type, count]) => {
-          const cfg = TYPE_CONFIG[type] || TYPE_CONFIG["artículo"]!;
+          const cfg = TYPE_CONFIG[type] || TYPE_CONFIG["article"]!;
           const Icon = cfg.icon;
           return (
             <span key={type} className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${cfg.bg} ${cfg.color}`}>
@@ -57,14 +57,13 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
         })}
       </div>
 
-      {/* Cards grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {rows.map((row, i) => {
           const type = typeIdx !== -1 ? row[typeIdx]?.toLowerCase().trim() : "";
-          const cfg = TYPE_CONFIG[type] || TYPE_CONFIG["artículo"]!;
+          const cfg = TYPE_CONFIG[type] || TYPE_CONFIG["article"]!;
           const Icon = cfg.icon;
           return (
-            <Card key={i} className="border-border bg-card p-5 transition-all hover:border-primary/30">
+            <Card key={i} className="border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md">
               <div className="flex items-start justify-between">
                 <span className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.bg} ${cfg.color}`}>
                   <Icon className="h-3 w-3" />

@@ -12,15 +12,14 @@ interface Props {
 }
 
 const TABS = [
-  { key: "rentabilidad", label: "Rentabilidad" },
+  { key: "rentabilidad", label: "Performance" },
   { key: "portfolio", label: "Portfolio" },
-  { key: "estudiados", label: "Estudiados" },
-  { key: "desarrollo", label: "En desarrollo" },
+  { key: "estudiados", label: "Watchlist" },
+  { key: "desarrollo", label: "Pipeline" },
 ] as const;
 
 type TabKey = typeof TABS[number]["key"];
 
-// Sheet names to try for each tab
 const SHEET_NAMES: Record<TabKey, string[]> = {
   rentabilidad: ["Rentabilidad", "rentabilidad", "Returns", "Performance"],
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
@@ -42,7 +41,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
   const loadData = useCallback(async () => {
     setLoading(true);
     const now = new Date();
-    setLastUpdate(now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }));
+    setLastUpdate(now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
 
     const results: Record<string, SheetData | null> = {};
 
@@ -118,7 +117,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
       {/* Footer */}
       <footer className="border-t border-border py-3 text-right">
         <div className="container">
-          <span className="text-xs text-muted-foreground">Datos en tiempo real · {lastUpdate}</span>
+          <span className="text-xs text-muted-foreground">Real-time data · {lastUpdate}</span>
         </div>
       </footer>
     </div>

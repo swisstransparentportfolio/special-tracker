@@ -9,7 +9,7 @@ interface LoginScreenProps {
 }
 
 const CORRECT_PASSWORD = "suscriptores2026";
-const DEFAULT_SHEET_ID = "";
+const DEFAULT_SHEET_ID = "1p8dGFb-qsIEEmW3ApWyosx3TZsBsGFzd";
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [password, setPassword] = useState("");
@@ -18,21 +18,19 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
 
   const extractSheetId = (input: string): string => {
     const trimmed = input.trim();
-    // Match the ID from a full Google Sheets URL
     const match = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
     if (match) return match[1];
-    // Otherwise assume it's already a raw ID
     return trimmed;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== CORRECT_PASSWORD) {
-      setError("Contraseña incorrecta");
+      setError("Incorrect password");
       return;
     }
     if (!sheetId.trim()) {
-      setError("Introduce el ID o URL de Google Sheet");
+      setError("Enter the Google Sheet ID or URL");
       return;
     }
     setError("");
@@ -51,13 +49,13 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
               <h1 className="font-display text-xl font-bold text-foreground">
                 SwissTransparentPortfolio
               </h1>
-              <p className="text-sm text-muted-foreground">Panel privado de inversiones</p>
+              <p className="text-sm text-muted-foreground">Private Investment Dashboard</p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-muted-foreground">Contraseña</Label>
+              <Label htmlFor="password" className="text-muted-foreground">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -73,21 +71,21 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             )}
 
             <Button type="submit" className="w-full gap-2">
-              Entrar <ArrowRight className="h-4 w-4" />
+              Sign In <ArrowRight className="h-4 w-4" />
             </Button>
 
             <div className="border-t border-border pt-4">
-              <Label htmlFor="sheetId" className="text-muted-foreground">ID de Google Sheet</Label>
+              <Label htmlFor="sheetId" className="text-muted-foreground">Google Sheet ID</Label>
               <Input
                 id="sheetId"
                 type="text"
                 value={sheetId}
                 onChange={e => setSheetId(e.target.value)}
                 className="mt-2 bg-secondary border-border font-mono text-xs"
-                placeholder="URL o ID del Google Sheet"
+                placeholder="URL or Google Sheet ID"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Compartido como "Cualquiera con el enlace puede ver"
+                Shared as "Anyone with the link can view"
               </p>
             </div>
           </form>

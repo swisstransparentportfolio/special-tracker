@@ -8,12 +8,11 @@ interface Props {
 }
 
 const COLORS = [
-  "hsl(40, 70%, 55%)", "hsl(200, 60%, 50%)", "hsl(152, 60%, 45%)",
-  "hsl(280, 50%, 55%)", "hsl(350, 60%, 55%)", "hsl(30, 70%, 50%)",
-  "hsl(170, 50%, 45%)", "hsl(240, 40%, 55%)", "hsl(60, 50%, 45%)",
-  "hsl(310, 50%, 50%)", "hsl(100, 50%, 40%)", "hsl(20, 60%, 50%)",
-  "hsl(190, 50%, 45%)", "hsl(330, 50%, 55%)", "hsl(80, 45%, 45%)",
-  "hsl(260, 45%, 55%)", "hsl(10, 60%, 50%)", "hsl(140, 50%, 45%)",
+  "hsl(0, 60%, 45%)", "hsl(220, 14%, 55%)", "hsl(152, 55%, 38%)",
+  "hsl(210, 45%, 50%)", "hsl(0, 40%, 60%)", "hsl(30, 50%, 50%)",
+  "hsl(170, 40%, 42%)", "hsl(240, 30%, 50%)", "hsl(45, 50%, 45%)",
+  "hsl(310, 35%, 48%)", "hsl(100, 40%, 40%)", "hsl(20, 50%, 48%)",
+  "hsl(190, 40%, 42%)", "hsl(330, 40%, 50%)", "hsl(80, 35%, 42%)",
 ];
 
 export default function PortfolioTab({ portfolioData, loading }: Props) {
@@ -32,7 +31,6 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
   const geoIdx = getColIdx(headers, "geograf");
   const riskIdx = getColIdx(headers, "riesgo");
 
-  // Build pie data
   const pieData = rows
     .filter(r => {
       const w = parseFloat(r[weightIdx]?.replace(",", ".").replace("%", ""));
@@ -54,29 +52,26 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Posiciones activas</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active Positions</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">{totalPositions}</p>
         </Card>
         <Card className="border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Liquidez</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Liquidity</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">{liquidityPct}</p>
         </Card>
         <Card className="border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total valores</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Securities</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">{rows.length}</p>
         </Card>
       </div>
 
-      {/* Pie chart + table layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Donut chart */}
         {pieData.length > 0 && (
           <Card className="border-border bg-card p-5 lg:col-span-2">
             <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Composición
+              Composition
             </h3>
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
@@ -96,7 +91,7 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
                 </Pie>
                 <Tooltip
                   formatter={(v: number) => `${v.toFixed(1)}%`}
-                  contentStyle={{ background: "hsl(220, 18%, 14%)", border: "1px solid hsl(220, 15%, 22%)", borderRadius: "8px", fontSize: 12 }}
+                  contentStyle={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsl(220, 14%, 88%)", borderRadius: "8px", fontSize: 12 }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -111,25 +106,24 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
           </Card>
         )}
 
-        {/* Positions table */}
         <Card className="overflow-x-auto border-border bg-card p-4 lg:col-span-3">
           <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Posiciones — SwissTransparentPortfolio
+            Positions
             <span className="ml-2 text-xs font-normal text-muted-foreground">
-              {totalPositions} valores
+              {totalPositions} securities
             </span>
           </h3>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Empresa</th>
+                <th className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
                 {geoIdx !== -1 && <th className="hidden px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:table-cell">Geo</th>}
-                {currencyIdx !== -1 && <th className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mon.</th>}
-                {priceIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio</th>}
-                {targetIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">P.O.</th>}
-                {cagrIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">CAGR 3A</th>}
-                {weightIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Peso</th>}
-                {riskIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Riesgo</th>}
+                {currencyIdx !== -1 && <th className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ccy</th>}
+                {priceIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Price</th>}
+                {targetIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target</th>}
+                {cagrIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">3Y CAGR</th>}
+                {weightIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weight</th>}
+                {riskIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risk</th>}
               </tr>
             </thead>
             <tbody>
@@ -192,7 +186,7 @@ function LoadingSkeleton() {
 function EmptyState() {
   return (
     <Card className="flex h-64 items-center justify-center border-border bg-card">
-      <p className="text-muted-foreground">No se encontró la hoja del portfolio</p>
+      <p className="text-muted-foreground">No portfolio sheet found</p>
     </Card>
   );
 }

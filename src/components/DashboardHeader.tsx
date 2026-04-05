@@ -18,11 +18,11 @@ export default function DashboardHeader({ lastUpdate, onRefresh, onLogout, loadi
           </h1>
           <span className="flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success">
             <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-dot" />
-            En vivo
+            Live
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="hidden sm:inline">Actualizado {lastUpdate}</span>
+          <span className="hidden sm:inline">Updated {lastUpdate}</span>
           <Button
             variant="outline"
             size="sm"
@@ -31,11 +31,11 @@ export default function DashboardHeader({ lastUpdate, onRefresh, onLogout, loadi
             className="gap-1.5"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Actualizar
+            Refresh
           </Button>
           <Button variant="outline" size="sm" onClick={onLogout} className="gap-1.5">
             <LogOut className="h-3.5 w-3.5" />
-            Salir
+            Logout
           </Button>
         </div>
       </div>
