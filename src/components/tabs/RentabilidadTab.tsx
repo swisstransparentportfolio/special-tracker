@@ -24,15 +24,26 @@ interface Props {
 const PERIOD_FILTERS = ["YTD", "1Y", "2Y", "3Y", "Since Inception", "Annualized CAGR"];
 type ChartType = "bar" | "line" | "area";
 
-export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
+export default function RentabilidadTab({ rentabilidadData, loading, benchmarks }: Props) {
   const [activePeriod, setActivePeriod] = useState("Since Inception");
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   const allChartData = useMemo(() => {
     if (!rentabilidadData || rentabilidadData.rows.length === 0) return [];
-    return extractChartData(rentabilidadData.headers, rentabilidadData.rows);
-  }, [rentabilidadData]);
+    const data = extractChartData(rentabilidadData.headers, rentabilidadData.rows);
+    
+    // Override current year with real-time benchmark data
+    if (benchmarks) {
+      const currentYear = String(new Date().getFullYear());
+      const idx = data.findIndex(d => String(d.name) === currentYear);
+      if (idx !== -1) {
+        if (benchmarks.sp500Ytd !== null) data[idx].sp500 = benchmarks.sp500Ytd;
+        if (benchmarks.nasdaqYtd !== null) data[idx].nasdaq = benchmarks.nasdaqYtd;
+      }
+    }
+    return data;
+  }, [rentabilidadData, benchmarks]);
 
   const filteredChartData = useMemo(() => {
     if (allChartData.length === 0) return [];
