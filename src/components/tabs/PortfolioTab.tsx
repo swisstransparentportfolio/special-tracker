@@ -1,7 +1,7 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { ExternalLink, FileText, BarChart3 } from "lucide-react";
+import { FileText, BarChart3 } from "lucide-react";
 
 interface Props {
   portfolioData: SheetData | null;
