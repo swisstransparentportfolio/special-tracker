@@ -45,8 +45,6 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
     const now = new Date();
     setLastUpdate(now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
 
-    const results: Record<string, SheetData | null> = {};
-
     const [sheetResults, benchmarkData] = await Promise.all([
       Promise.all(
         (Object.keys(SHEET_NAMES) as TabKey[]).map(async (tab) => {
@@ -64,22 +62,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
 
     const results: Record<string, SheetData | null> = {};
     sheetResults.forEach(({ tab, sheet }) => { results[tab] = sheet; });
-      (Object.keys(SHEET_NAMES) as TabKey[]).map(async (tab) => {
-        for (const name of SHEET_NAMES[tab]) {
-          try {
-            const sheet = await fetchSheet(sheetId, name);
-            if (sheet.rows.length > 0) {
-              results[tab] = sheet;
-              return;
-            }
-          } catch {
-            // Try next name
-          }
-        }
-        results[tab] = null;
-      })
-    );
-
+    setBenchmarks(benchmarkData);
     setData(results as Record<TabKey, SheetData | null>);
     setLoading(false);
   }, [sheetId]);
