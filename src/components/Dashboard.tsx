@@ -59,7 +59,16 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
           for (const name of SHEET_NAMES[tab]) {
             try {
               const sheet = await fetchSheet(sheetId, name);
-              if (sheet.rows.length > 0) return { tab, sheet };
+              if (sheet.rows.length === 0) continue;
+              // Validate headers match expected tab
+              const validators = HEADER_VALIDATORS[tab];
+              const headersLower = sheet.headers.map(h => h.toLowerCase());
+              const matches = validators.some(v => headersLower.some(h => h.includes(v)));
+              if (matches) {
+                // Filter out NOTE/comment rows
+                sheet.rows = sheet.rows.filter(r => !r[0]?.startsWith("NOTE"));
+                return { tab, sheet };
+              }
             } catch { /* Try next */ }
           }
           return { tab, sheet: null };
