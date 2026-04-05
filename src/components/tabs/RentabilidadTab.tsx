@@ -24,81 +24,86 @@ interface Props {
 const PERIOD_FILTERS = ["YTD", "1Y", "2Y", "3Y", "Since Inception", "Annualized CAGR"];
 type ChartType = "bar" | "line" | "area";
 
+function parseVal(s: string | undefined): number {
+  if (!s) return 0;
+  return parseFloat(s.replace(",", ".").replace("%", "").replace("+", "")) || 0;
+}
+
 export default function RentabilidadTab({ rentabilidadData, loading, benchmarks }: Props) {
   const [activePeriod, setActivePeriod] = useState("Since Inception");
   const [chartType, setChartType] = useState<ChartType>("bar");
-  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
-  const allChartData = useMemo(() => {
+  // Parse all rows into structured data
+  const allData = useMemo(() => {
     if (!rentabilidadData || rentabilidadData.rows.length === 0) return [];
-    const data = extractChartData(rentabilidadData.headers, rentabilidadData.rows);
-    
-    // Override current year with real-time benchmark data
-    if (benchmarks) {
-      const currentYear = String(new Date().getFullYear());
-      const idx = data.findIndex(d => String(d.name) === currentYear);
-      if (idx !== -1) {
-        if (benchmarks.sp500Ytd !== null) data[idx].sp500 = benchmarks.sp500Ytd;
-        if (benchmarks.nasdaqYtd !== null) data[idx].nasdaq = benchmarks.nasdaqYtd;
-      }
-    }
-    return data;
-  }, [rentabilidadData, benchmarks]);
+    const { rows } = rentabilidadData;
+    return rows
+      .filter(r => r[0] && !r[0].startsWith("NOTE"))
+      .map(r => ({
+        name: r[0]?.trim() || "",
+        portfolio: parseVal(r[1]),
+        sp500: parseVal(r[2]),
+        nasdaq: parseVal(r[3]),
+        rawPortfolio: r[1]?.trim() || "",
+        rawSp500: r[2]?.trim() || "",
+        rawNasdaq: r[3]?.trim() || "",
+      }));
+  }, [rentabilidadData]);
 
+  // Find specific rows
+  const findRow = (keyword: string) => allData.find(d => d.name.toLowerCase().includes(keyword.toLowerCase()));
+
+  const ytdRow = findRow("YTD");
+  const cagrRow = findRow("CAGR");
+  const sinceInceptionRow = findRow("Since Inception") || findRow("Inception");
+  const yearRows = allData.filter(d => /^\d{4}$/.test(d.name));
+
+  // Filtered chart data based on period
   const filteredChartData = useMemo(() => {
-    if (allChartData.length === 0) return [];
     const currentYear = new Date().getFullYear();
-
     switch (activePeriod) {
       case "YTD":
-        return allChartData.filter(d => String(d.name) === String(currentYear));
+        return ytdRow ? [ytdRow] : [];
       case "1Y":
-        return allChartData.filter(d => {
-          const y = parseInt(String(d.name));
-          return !isNaN(y) && y >= currentYear - 1;
-        });
+        return yearRows.filter(d => parseInt(d.name) >= currentYear - 1).concat(ytdRow ? [ytdRow] : []);
       case "2Y":
-        return allChartData.filter(d => {
-          const y = parseInt(String(d.name));
-          return !isNaN(y) && y >= currentYear - 2;
-        });
+        return yearRows.filter(d => parseInt(d.name) >= currentYear - 2).concat(ytdRow ? [ytdRow] : []);
       case "3Y":
-        return allChartData.filter(d => {
-          const y = parseInt(String(d.name));
-          return !isNaN(y) && y >= currentYear - 3;
-        });
-      case "Annualized CAGR": {
-        if (allChartData.length === 0) return [];
-        const totals = allChartData.reduce(
-          (acc, d) => ({
-            portfolio: acc.portfolio + d.portfolio,
-            sp500: acc.sp500 + d.sp500,
-            nasdaq: acc.nasdaq + d.nasdaq,
-            count: acc.count + 1,
-          }),
-          { portfolio: 0, sp500: 0, nasdaq: 0, count: 0 }
-        );
-        const n = totals.count || 1;
-        return [{
-          name: `CAGR (${n}Y)`,
-          portfolio: parseFloat((totals.portfolio / n).toFixed(2)),
-          sp500: parseFloat((totals.sp500 / n).toFixed(2)),
-          nasdaq: parseFloat((totals.nasdaq / n).toFixed(2)),
-        }];
-      }
+        return yearRows.filter(d => parseInt(d.name) >= currentYear - 3).concat(ytdRow ? [ytdRow] : []);
+      case "Annualized CAGR":
+        return cagrRow ? [cagrRow] : [];
       case "Since Inception":
       default:
-        return allChartData;
+        return [...yearRows, ...(ytdRow ? [ytdRow] : [])];
     }
-  }, [allChartData, activePeriod]);
+  }, [allData, activePeriod, ytdRow, cagrRow, yearRows]);
+
+  // Dynamic summary cards based on selected period
+  const summaryCards = useMemo(() => {
+    let targetRow = ytdRow; // default
+    switch (activePeriod) {
+      case "YTD": targetRow = ytdRow; break;
+      case "1Y": targetRow = yearRows.length > 0 ? yearRows[yearRows.length - 1] : ytdRow; break;
+      case "Since Inception": targetRow = sinceInceptionRow || ytdRow; break;
+      case "Annualized CAGR": targetRow = cagrRow; break;
+      case "2Y":
+      case "3Y":
+        targetRow = ytdRow;
+        break;
+    }
+    if (!targetRow) return [];
+    return [
+      { label: "Period", value: targetRow.name },
+      { label: "Portfolio %", value: targetRow.rawPortfolio, num: targetRow.portfolio },
+      { label: "S&P 500 %", value: targetRow.rawSp500, num: targetRow.sp500 },
+      { label: "Nasdaq-100 %", value: targetRow.rawNasdaq, num: targetRow.nasdaq },
+    ];
+  }, [activePeriod, ytdRow, cagrRow, sinceInceptionRow, yearRows]);
 
   if (loading) return <LoadingSkeleton />;
-  if (!rentabilidadData || rentabilidadData.rows.length === 0) {
-    return <EmptyState />;
-  }
+  if (!rentabilidadData || rentabilidadData.rows.length === 0) return <EmptyState />;
 
   const { headers, rows } = rentabilidadData;
-  const summaryCards = extractSummaryCards(headers, rows);
 
   const chartColors = {
     portfolio: "hsl(var(--primary))",
@@ -154,31 +159,33 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards - dynamic based on period */}
       {summaryCards.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           {summaryCards.map((card, i) => {
-            const isNegative = card.value.startsWith("-");
+            const isFirst = i === 0;
+            const isNegative = !isFirst && card.num !== undefined && card.num < 0;
+            const isPositive = !isFirst && card.num !== undefined && card.num > 0;
             return (
               <Card key={i} className="border-border bg-card p-5 transition-all hover:shadow-md hover:border-primary/20">
                 <div className="flex items-start justify-between">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {card.label}
                   </p>
-                  {isNegative ? (
-                    <TrendingDown className="h-4 w-4 text-destructive" />
-                  ) : (
-                    <TrendingUp className="h-4 w-4 text-success" />
+                  {!isFirst && (
+                    isNegative
+                      ? <TrendingDown className="h-4 w-4 text-destructive" />
+                      : <TrendingUp className="h-4 w-4 text-success" />
                   )}
                 </div>
                 <p className={`mt-1 font-display text-2xl font-bold ${
-                  isNegative ? "text-destructive" : "text-success"
+                  isFirst ? "text-foreground"
+                    : isNegative ? "text-destructive"
+                    : isPositive ? "text-success"
+                    : "text-foreground"
                 }`}>
-                  {card.value}
+                  {card.value || "—"}
                 </p>
-                {card.sub && (
-                  <p className="text-xs text-muted-foreground">{card.sub}</p>
-                )}
               </Card>
             );
           })}
@@ -190,16 +197,13 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
         <Card className="border-border bg-card p-5 transition-all hover:shadow-md">
           <h3 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Comparison — {activePeriod}
-            <span className="ml-2 text-xs font-normal">
-              ({filteredChartData.length} {filteredChartData.length === 1 ? "period" : "periods"})
-            </span>
           </h3>
           <ResponsiveContainer width="100%" height={340}>
             {chartType === "bar" ? (
               <BarChart data={filteredChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 88%)" />
-                <XAxis dataKey="name" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />
-                <YAxis tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} tickFormatter={v => `${v}%`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={v => `${v}%`} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `${v.toFixed(2)}%`} />
                 <Legend />
                 <Bar dataKey="portfolio" name="Portfolio" fill={chartColors.portfolio} radius={[4, 4, 0, 0]} />
@@ -208,9 +212,9 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
               </BarChart>
             ) : chartType === "line" ? (
               <LineChart data={filteredChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 88%)" />
-                <XAxis dataKey="name" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />
-                <YAxis tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} tickFormatter={v => `${v}%`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={v => `${v}%`} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `${v.toFixed(2)}%`} />
                 <Legend />
                 <Line type="monotone" dataKey="portfolio" name="Portfolio" stroke={chartColors.portfolio} strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
@@ -219,9 +223,9 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
               </LineChart>
             ) : (
               <AreaChart data={filteredChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 88%)" />
-                <XAxis dataKey="name" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />
-                <YAxis tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} tickFormatter={v => `${v}%`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={v => `${v}%`} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `${v.toFixed(2)}%`} />
                 <Legend />
                 <Area type="monotone" dataKey="portfolio" name="Portfolio" stroke={chartColors.portfolio} fill={chartColors.portfolio} fillOpacity={0.15} strokeWidth={2} />
@@ -255,18 +259,11 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => (
-              <tr
-                key={i}
-                className={`border-b border-border/50 transition-all cursor-pointer ${
-                  hoveredRow === i ? "bg-primary/5 scale-[1.001]" : "hover:bg-secondary/50"
-                }`}
-                onMouseEnter={() => setHoveredRow(i)}
-                onMouseLeave={() => setHoveredRow(null)}
-              >
+            {rows.filter(r => !r[0]?.startsWith("NOTE")).map((row, i) => (
+              <tr key={i} className="border-b border-border/50 transition-all hover:bg-secondary/50">
                 {row.map((cell, j) => {
-                  const num = parseFloat(cell.replace(",", ".").replace("%", ""));
-                  const isNumeric = !isNaN(num) && j > 0;
+                  const num = parseVal(cell);
+                  const isNumeric = j > 0 && cell?.includes("%");
                   return (
                     <td key={j} className={`px-3 py-2.5 ${
                       isNumeric
@@ -286,44 +283,11 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
   );
 }
 
-function extractSummaryCards(headers: string[], rows: string[][]) {
-  const cards: { label: string; value: string; sub?: string }[] = [];
-  if (rows.length === 0) return cards;
-  const max = Math.min(headers.length, 3);
-  for (let i = 0; i < max; i++) {
-    if (rows[0][i]) {
-      cards.push({ label: headers[i], value: rows[0][i] });
-    }
-  }
-  return cards;
-}
-
-function extractChartData(headers: string[], rows: string[][]) {
-  if (rows.length < 2) return [];
-  
-  const yearIdx = getColIdx(headers, "año");
-  if (yearIdx === -1 && rows.length > 1) {
-    return rows.slice(0, 10).map((r, i) => ({
-      name: r[0] || `${i + 1}`,
-      portfolio: parseFloat(r[1]?.replace(",", ".").replace("%", "")) || 0,
-      sp500: parseFloat(r[2]?.replace(",", ".").replace("%", "")) || 0,
-      nasdaq: parseFloat(r[3]?.replace(",", ".").replace("%", "")) || 0,
-    }));
-  }
-
-  return rows.map(r => ({
-    name: r[yearIdx] || "",
-    portfolio: parseFloat(r[yearIdx + 1]?.replace(",", ".").replace("%", "")) || 0,
-    sp500: parseFloat(r[yearIdx + 2]?.replace(",", ".").replace("%", "")) || 0,
-    nasdaq: parseFloat(r[yearIdx + 3]?.replace(",", ".").replace("%", "")) || 0,
-  }));
-}
-
 function LoadingSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
-        {[1, 2, 3].map(i => (
+      <div className="grid grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => (
           <div key={i} className="h-24 animate-pulse rounded-lg bg-card" />
         ))}
       </div>
