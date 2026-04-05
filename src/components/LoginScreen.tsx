@@ -44,12 +44,10 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       <div className="w-full max-w-md animate-fade-in">
         <div className="rounded-lg border border-border bg-card p-8 shadow-2xl">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Lock className="h-5 w-5 text-primary" />
-            </div>
+            <img src={logoSp} alt="Swiss Portfolio" className="h-12 w-12 rounded-lg object-cover shadow-md" />
             <div>
               <h1 className="font-display text-xl font-bold text-foreground">
-                SwissTransparentPortfolio
+                Swiss Portfolio
               </h1>
               <p className="text-sm text-muted-foreground">Private Investment Dashboard</p>
             </div>
