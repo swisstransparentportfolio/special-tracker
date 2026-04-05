@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   Legend, CartesianGrid, LineChart, Line, AreaChart, Area,
 } from "recharts";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TrendingUp, TrendingDown, BarChart3, Activity } from "lucide-react";
 
 interface Props {
@@ -16,9 +16,61 @@ const PERIOD_FILTERS = ["YTD", "1Y", "2Y", "3Y", "Since Inception", "Annualized 
 type ChartType = "bar" | "line" | "area";
 
 export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
-  const [activePeriod, setActivePeriod] = useState("YTD");
+  const [activePeriod, setActivePeriod] = useState("Since Inception");
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+
+  const allChartData = useMemo(() => {
+    if (!rentabilidadData || rentabilidadData.rows.length === 0) return [];
+    return extractChartData(rentabilidadData.headers, rentabilidadData.rows);
+  }, [rentabilidadData]);
+
+  const filteredChartData = useMemo(() => {
+    if (allChartData.length === 0) return [];
+    const currentYear = new Date().getFullYear();
+
+    switch (activePeriod) {
+      case "YTD":
+        return allChartData.filter(d => String(d.name) === String(currentYear));
+      case "1Y":
+        return allChartData.filter(d => {
+          const y = parseInt(String(d.name));
+          return !isNaN(y) && y >= currentYear - 1;
+        });
+      case "2Y":
+        return allChartData.filter(d => {
+          const y = parseInt(String(d.name));
+          return !isNaN(y) && y >= currentYear - 2;
+        });
+      case "3Y":
+        return allChartData.filter(d => {
+          const y = parseInt(String(d.name));
+          return !isNaN(y) && y >= currentYear - 3;
+        });
+      case "Annualized CAGR": {
+        if (allChartData.length === 0) return [];
+        const totals = allChartData.reduce(
+          (acc, d) => ({
+            portfolio: acc.portfolio + d.portfolio,
+            sp500: acc.sp500 + d.sp500,
+            nasdaq: acc.nasdaq + d.nasdaq,
+            count: acc.count + 1,
+          }),
+          { portfolio: 0, sp500: 0, nasdaq: 0, count: 0 }
+        );
+        const n = totals.count || 1;
+        return [{
+          name: `CAGR (${n}Y)`,
+          portfolio: parseFloat((totals.portfolio / n).toFixed(2)),
+          sp500: parseFloat((totals.sp500 / n).toFixed(2)),
+          nasdaq: parseFloat((totals.nasdaq / n).toFixed(2)),
+        }];
+      }
+      case "Since Inception":
+      default:
+        return allChartData;
+    }
+  }, [allChartData, activePeriod]);
 
   if (loading) return <LoadingSkeleton />;
   if (!rentabilidadData || rentabilidadData.rows.length === 0) {
@@ -27,17 +79,16 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
 
   const { headers, rows } = rentabilidadData;
   const summaryCards = extractSummaryCards(headers, rows);
-  const chartData = extractChartData(headers, rows);
 
   const chartColors = {
-    portfolio: "hsl(0, 60%, 45%)",
-    sp500: "hsl(220, 14%, 55%)",
+    portfolio: "hsl(var(--primary))",
+    sp500: "hsl(var(--muted-foreground))",
     nasdaq: "hsl(220, 14%, 40%)",
   };
 
   const tooltipStyle = {
-    background: "hsl(0, 0%, 100%)",
-    border: "1px solid hsl(220, 14%, 88%)",
+    background: "hsl(var(--card))",
+    border: "1px solid hsl(var(--border))",
     borderRadius: "8px",
     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
     fontSize: 12,
@@ -61,7 +112,6 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
           </button>
         ))}
 
-        {/* Chart type toggle */}
         <div className="ml-auto flex items-center gap-1 rounded-lg border border-border bg-card p-0.5">
           {([
             { type: "bar" as ChartType, icon: BarChart3 },
@@ -116,14 +166,17 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
       )}
 
       {/* Chart */}
-      {chartData.length > 0 && (
+      {filteredChartData.length > 0 && (
         <Card className="border-border bg-card p-5 transition-all hover:shadow-md">
           <h3 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Comparison — {activePeriod}
+            <span className="ml-2 text-xs font-normal">
+              ({filteredChartData.length} {filteredChartData.length === 1 ? "period" : "periods"})
+            </span>
           </h3>
           <ResponsiveContainer width="100%" height={340}>
             {chartType === "bar" ? (
-              <BarChart data={chartData}>
+              <BarChart data={filteredChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 88%)" />
                 <XAxis dataKey="name" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />
                 <YAxis tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} tickFormatter={v => `${v}%`} />
@@ -134,18 +187,18 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
                 <Bar dataKey="nasdaq" name="Nasdaq-100" fill={chartColors.nasdaq} radius={[4, 4, 0, 0]} />
               </BarChart>
             ) : chartType === "line" ? (
-              <LineChart data={chartData}>
+              <LineChart data={filteredChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 88%)" />
                 <XAxis dataKey="name" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />
                 <YAxis tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} tickFormatter={v => `${v}%`} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `${v.toFixed(2)}%`} />
                 <Legend />
-                <Line type="monotone" dataKey="portfolio" name="Portfolio" stroke={chartColors.portfolio} strokeWidth={2.5} dot={{ r: 4, fill: chartColors.portfolio }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="portfolio" name="Portfolio" stroke={chartColors.portfolio} strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                 <Line type="monotone" dataKey="sp500" name="S&P 500" stroke={chartColors.sp500} strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="nasdaq" name="Nasdaq-100" stroke={chartColors.nasdaq} strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             ) : (
-              <AreaChart data={chartData}>
+              <AreaChart data={filteredChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 88%)" />
                 <XAxis dataKey="name" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />
                 <YAxis tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} tickFormatter={v => `${v}%`} />
@@ -160,7 +213,13 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
         </Card>
       )}
 
-      {/* Interactive data table */}
+      {filteredChartData.length === 0 && (
+        <Card className="flex h-40 items-center justify-center border-border bg-card">
+          <p className="text-muted-foreground">No data available for "{activePeriod}"</p>
+        </Card>
+      )}
+
+      {/* Data table */}
       <Card className="overflow-x-auto border-border bg-card p-4 transition-all hover:shadow-md">
         <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Detailed Performance Data

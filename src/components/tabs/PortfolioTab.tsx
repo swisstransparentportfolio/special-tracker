@@ -1,6 +1,7 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { ExternalLink, FileText, BarChart3 } from "lucide-react";
 
 interface Props {
   portfolioData: SheetData | null;
@@ -8,12 +9,30 @@ interface Props {
 }
 
 const COLORS = [
-  "hsl(0, 60%, 45%)", "hsl(220, 14%, 55%)", "hsl(152, 55%, 38%)",
-  "hsl(210, 45%, 50%)", "hsl(0, 40%, 60%)", "hsl(30, 50%, 50%)",
-  "hsl(170, 40%, 42%)", "hsl(240, 30%, 50%)", "hsl(45, 50%, 45%)",
-  "hsl(310, 35%, 48%)", "hsl(100, 40%, 40%)", "hsl(20, 50%, 48%)",
-  "hsl(190, 40%, 42%)", "hsl(330, 40%, 50%)", "hsl(80, 35%, 42%)",
+  "hsl(210, 65%, 55%)", "hsl(152, 55%, 42%)", "hsl(30, 65%, 50%)",
+  "hsl(340, 55%, 50%)", "hsl(170, 50%, 42%)", "hsl(260, 45%, 55%)",
+  "hsl(45, 60%, 48%)", "hsl(0, 55%, 50%)", "hsl(195, 55%, 45%)",
+  "hsl(120, 40%, 42%)", "hsl(280, 40%, 50%)", "hsl(15, 60%, 48%)",
+  "hsl(190, 45%, 50%)", "hsl(320, 45%, 48%)", "hsl(80, 45%, 42%)",
+  "hsl(230, 50%, 55%)", "hsl(60, 50%, 45%)", "hsl(350, 50%, 52%)",
 ];
+
+const RADIAN = Math.PI / 180;
+
+function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, name, value }: any) {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  if (value < 3.5) return null;
+
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700}>
+      <tspan x={x} dy="-6">{name}</tspan>
+      <tspan x={x} dy="14">{value.toFixed(1)}%</tspan>
+    </text>
+  );
+}
 
 export default function PortfolioTab({ portfolioData, loading }: Props) {
   if (loading) return <LoadingSkeleton />;
@@ -23,6 +42,7 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
 
   const { headers, rows } = portfolioData;
   const nameIdx = getColIdx(headers, "empresa") !== -1 ? getColIdx(headers, "empresa") : 0;
+  const tickerIdx = getColIdx(headers, "ticker");
   const weightIdx = getColIdx(headers, "peso");
   const priceIdx = getColIdx(headers, "precio");
   const targetIdx = getColIdx(headers, "p.o");
@@ -30,6 +50,10 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
   const currencyIdx = getColIdx(headers, "moneda");
   const geoIdx = getColIdx(headers, "geograf");
   const riskIdx = getColIdx(headers, "riesgo");
+  const detailIdx = getColIdx(headers, "detalle");
+  const thesisIdx = getColIdx(headers, "tesis");
+  const modelIdx = getColIdx(headers, "modelo");
+  const ageIdx = getColIdx(headers, "antigüedad") !== -1 ? getColIdx(headers, "antigüedad") : getColIdx(headers, "antiguedad");
 
   const pieData = rows
     .filter(r => {
@@ -37,7 +61,8 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
       return weightIdx !== -1 && !isNaN(w) && w > 0;
     })
     .map(r => ({
-      name: r[nameIdx] || "—",
+      name: (tickerIdx !== -1 ? r[tickerIdx] : r[nameIdx]?.split(" ")[0]) || "—",
+      fullName: r[nameIdx] || "—",
       value: parseFloat(r[weightIdx]?.replace(",", ".").replace("%", "")) || 0,
     }))
     .sort((a, b) => b.value - a.value);
@@ -50,12 +75,16 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
   const liquidityRow = rows.find(r => r[nameIdx]?.toLowerCase().includes("liquid"));
   const liquidityPct = liquidityRow && weightIdx !== -1 ? liquidityRow[weightIdx] : "—";
 
+  const hasLinks = thesisIdx !== -1 || modelIdx !== -1;
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border bg-card p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active Positions</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">{totalPositions}</p>
+          <p className="text-xs text-muted-foreground">{rows.length} total securities</p>
         </Card>
         <Card className="border-border bg-card p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Liquidity</p>
@@ -67,96 +96,135 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {pieData.length > 0 && (
-          <Card className="border-border bg-card p-5 lg:col-span-2">
-            <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Composition
-            </h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={110}
-                  dataKey="value"
-                  paddingAngle={1}
-                  stroke="none"
-                >
-                  {pieData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(v: number) => `${v.toFixed(1)}%`}
-                  contentStyle={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsl(220, 14%, 88%)", borderRadius: "8px", fontSize: 12 }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {pieData.slice(0, 8).map((d, i) => (
-                <span key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                  {d.name} {d.value.toFixed(1)}%
-                </span>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        <Card className="overflow-x-auto border-border bg-card p-4 lg:col-span-3">
-          <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Positions
-            <span className="ml-2 text-xs font-normal text-muted-foreground">
-              {totalPositions} securities
-            </span>
+      {/* Donut chart */}
+      {pieData.length > 0 && (
+        <Card className="border-border bg-card p-5">
+          <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Portfolio Composition
           </h3>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
-                {geoIdx !== -1 && <th className="hidden px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:table-cell">Geo</th>}
-                {currencyIdx !== -1 && <th className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ccy</th>}
-                {priceIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Price</th>}
-                {targetIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target</th>}
-                {cagrIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">3Y CAGR</th>}
-                {weightIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weight</th>}
-                {riskIdx !== -1 && <th className="px-2 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risk</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => {
-                const cagr = cagrIdx !== -1 ? row[cagrIdx] : "";
-                const isPositive = cagr.startsWith("+") || (parseFloat(cagr.replace(",", ".").replace("%", "")) > 0);
-                return (
-                  <tr key={i} className="border-b border-border/30 transition-colors hover:bg-secondary/30">
-                    <td className="px-2 py-2.5 font-medium text-foreground">{row[nameIdx]}</td>
-                    {geoIdx !== -1 && <td className="hidden px-2 py-2.5 text-muted-foreground sm:table-cell">{row[geoIdx]}</td>}
-                    {currencyIdx !== -1 && <td className="px-2 py-2.5 text-muted-foreground">{row[currencyIdx]}</td>}
-                    {priceIdx !== -1 && <td className="px-2 py-2.5 text-right text-foreground">{row[priceIdx]}</td>}
-                    {targetIdx !== -1 && <td className="px-2 py-2.5 text-right text-foreground">{row[targetIdx]}</td>}
-                    {cagrIdx !== -1 && (
-                      <td className={`px-2 py-2.5 text-right font-medium ${
-                        isPositive ? "text-success" : cagr ? "text-destructive" : "text-muted-foreground"
-                      }`}>
-                        {cagr || "—"}
-                      </td>
-                    )}
-                    {weightIdx !== -1 && <td className="px-2 py-2.5 text-right text-foreground">{row[weightIdx]}</td>}
-                    {riskIdx !== -1 && (
-                      <td className="px-2 py-2.5 text-right">
-                        <RiskBadge value={row[riskIdx]} />
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <p className="mb-4 text-xs text-muted-foreground">Click a segment to see details</p>
+          <ResponsiveContainer width="100%" height={420}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={80}
+                outerRadius={180}
+                dataKey="value"
+                paddingAngle={1}
+                stroke="none"
+                label={renderCustomLabel}
+                labelLine={false}
+              >
+                {pieData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} className="cursor-pointer transition-opacity hover:opacity-80" />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(v: number, _name: string, props: any) => [`${v.toFixed(1)}%`, props.payload.fullName]}
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  fontSize: 12,
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </Card>
-      </div>
+      )}
+
+      {/* Positions table */}
+      <Card className="overflow-x-auto border-border bg-card p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Positions — Portfolio
+          </h3>
+          <span className="text-xs text-muted-foreground">
+            {totalPositions} securities · Liquidity {liquidityPct}
+          </span>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
+              {geoIdx !== -1 && <th className="hidden px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Geography</th>}
+              {currencyIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ccy</th>}
+              {priceIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Price</th>}
+              {targetIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">P.O. 3Y</th>}
+              {cagrIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">CAGR 3Y</th>}
+              {weightIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weight</th>}
+              {detailIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detail</th>}
+              {ageIdx !== -1 && <th className="hidden px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Age</th>}
+              {riskIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risk</th>}
+              {hasLinks && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Links</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => {
+              const cagr = cagrIdx !== -1 ? row[cagrIdx] : "";
+              const cagrNum = parseFloat(cagr.replace(",", ".").replace("%", ""));
+              const isPositive = !isNaN(cagrNum) && cagrNum > 0;
+              const ticker = tickerIdx !== -1 ? row[tickerIdx] : "";
+              const thesisUrl = thesisIdx !== -1 ? row[thesisIdx]?.trim() : "";
+              const modelUrl = modelIdx !== -1 ? row[modelIdx]?.trim() : "";
+
+              return (
+                <tr key={i} className="border-b border-border/30 transition-colors hover:bg-secondary/30">
+                  <td className="px-3 py-3">
+                    <div className="font-medium text-foreground">{row[nameIdx]}</div>
+                    {ticker && <div className="text-xs text-muted-foreground">{ticker}</div>}
+                  </td>
+                  {geoIdx !== -1 && <td className="hidden px-3 py-3 text-muted-foreground md:table-cell">{row[geoIdx]}</td>}
+                  {currencyIdx !== -1 && <td className="px-3 py-3 text-center font-medium text-muted-foreground">{row[currencyIdx]}</td>}
+                  {priceIdx !== -1 && <td className="px-3 py-3 text-right text-foreground">{row[priceIdx]}</td>}
+                  {targetIdx !== -1 && <td className="px-3 py-3 text-right font-medium text-foreground">{row[targetIdx] || "—"}</td>}
+                  {cagrIdx !== -1 && (
+                    <td className={`px-3 py-3 text-right font-medium ${
+                      isPositive ? "text-success" : cagr ? "text-destructive" : "text-muted-foreground"
+                    }`}>
+                      {cagr || "—"}
+                    </td>
+                  )}
+                  {weightIdx !== -1 && <td className="px-3 py-3 text-right text-foreground">{row[weightIdx]}</td>}
+                  {detailIdx !== -1 && (
+                    <td className="px-3 py-3 text-center">
+                      {row[detailIdx]?.trim() ? (
+                        <a href={row[detailIdx]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded border border-border bg-secondary px-2 py-0.5 text-xs font-medium text-foreground hover:bg-primary/10 transition-colors">
+                          <BarChart3 className="h-3 w-3" /> Detail
+                        </a>
+                      ) : "—"}
+                    </td>
+                  )}
+                  {ageIdx !== -1 && <td className="hidden px-3 py-3 text-center text-muted-foreground md:table-cell">{row[ageIdx] || "—"}</td>}
+                  {riskIdx !== -1 && (
+                    <td className="px-3 py-3 text-center">
+                      <RiskBadge value={row[riskIdx]} />
+                    </td>
+                  )}
+                  {hasLinks && (
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {thesisUrl && (
+                          <a href={thesisUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded border border-success/30 bg-success/10 px-2.5 py-1 text-xs font-medium text-success hover:bg-success/20 transition-colors">
+                            <FileText className="h-3 w-3" /> Thesis
+                          </a>
+                        )}
+                        {modelUrl && (
+                          <a href={modelUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors">
+                            <BarChart3 className="h-3 w-3" /> Model
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 }
