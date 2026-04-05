@@ -102,7 +102,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
       {/* Tab content */}
       <main className="container py-6">
         {activeTab === "rentabilidad" && (
-          <RentabilidadTab rentabilidadData={data.rentabilidad} loading={loading} />
+          <RentabilidadTab rentabilidadData={data.rentabilidad} loading={loading} benchmarks={benchmarks} />
         )}
         {activeTab === "portfolio" && (
           <PortfolioTab portfolioData={data.portfolio} loading={loading} />
