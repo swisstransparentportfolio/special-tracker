@@ -7,9 +7,18 @@ import {
 import { useState, useMemo } from "react";
 import { TrendingUp, TrendingDown, BarChart3, Activity } from "lucide-react";
 
+interface BenchmarkLive {
+  sp500Ytd: number | null;
+  nasdaqYtd: number | null;
+  sp500Current: number | null;
+  nasdaqCurrent: number | null;
+  lastUpdated: string;
+}
+
 interface Props {
   rentabilidadData: SheetData | null;
   loading: boolean;
+  benchmarks?: BenchmarkLive | null;
 }
 
 const PERIOD_FILTERS = ["YTD", "1Y", "2Y", "3Y", "Since Inception", "Annualized CAGR"];
