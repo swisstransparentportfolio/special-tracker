@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { RefreshCw, LogOut, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
+import logoSp from "@/assets/logo-sp.jpg";
 
 interface DashboardHeaderProps {
   lastUpdate: string;
