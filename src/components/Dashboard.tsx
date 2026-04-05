@@ -32,6 +32,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("rentabilidad");
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState("");
+  const [benchmarks, setBenchmarks] = useState<any>(null);
   const [data, setData] = useState<Record<TabKey, SheetData | null>>({
     rentabilidad: null,
     portfolio: null,
