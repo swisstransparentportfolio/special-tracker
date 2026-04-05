@@ -78,7 +78,7 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
 
   const totalPositions = activeRows.length;
   const liquidityRow = rows.find(r => r[nameIdx]?.toLowerCase().includes("liquid"));
-  const liquidityPct = liquidityRow && weightIdx !== -1 ? r(liquidityRow[weightIdx]) : "—";
+  const liquidityPct = liquidityRow && weightIdx !== -1 ? (liquidityRow[weightIdx]?.trim() || "—") : "—";
 
   // Weighted CAGR
   let weightedCagr = 0;
