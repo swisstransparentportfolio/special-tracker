@@ -1,7 +1,7 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { ExternalLink, FileText, BarChart3 } from "lucide-react";
+import { FileText, BarChart3 } from "lucide-react";
 
 interface Props {
   portfolioData: SheetData | null;
@@ -23,15 +23,21 @@ function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, name, v
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
   if (value < 3.5) return null;
-
   return (
     <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700}>
       <tspan x={x} dy="-6">{name}</tspan>
       <tspan x={x} dy="14">{value.toFixed(1)}%</tspan>
     </text>
   );
+}
+
+function findCol(headers: string[], ...names: string[]): number {
+  for (const n of names) {
+    const idx = getColIdx(headers, n);
+    if (idx !== -1) return idx;
+  }
+  return -1;
 }
 
 export default function PortfolioTab({ portfolioData, loading }: Props) {
@@ -41,39 +47,76 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
   }
 
   const { headers, rows } = portfolioData;
-  const nameIdx = getColIdx(headers, "empresa") !== -1 ? getColIdx(headers, "empresa") : 0;
-  const tickerIdx = getColIdx(headers, "ticker");
-  const weightIdx = getColIdx(headers, "peso");
-  const priceIdx = getColIdx(headers, "precio");
-  const targetIdx = getColIdx(headers, "p.o");
-  const cagrIdx = getColIdx(headers, "cagr");
-  const currencyIdx = getColIdx(headers, "moneda");
-  const geoIdx = getColIdx(headers, "geograf");
-  const riskIdx = getColIdx(headers, "riesgo");
-  const detailIdx = getColIdx(headers, "detalle");
-  const thesisIdx = getColIdx(headers, "research") !== -1 ? getColIdx(headers, "research") : getColIdx(headers, "tesis");
-  const modelIdx = getColIdx(headers, "model") !== -1 ? getColIdx(headers, "model") : getColIdx(headers, "modelo");
-  const ageIdx = getColIdx(headers, "antigüedad") !== -1 ? getColIdx(headers, "antigüedad") : getColIdx(headers, "antiguedad");
 
-  const pieData = rows
-    .filter(r => {
-      const w = parseFloat(r[weightIdx]?.replace(",", ".").replace("%", ""));
-      return weightIdx !== -1 && !isNaN(w) && w > 0;
-    })
+  // Column indices - try English first, then Spanish fallbacks
+  const nameIdx = findCol(headers, "company", "empresa") !== -1 ? findCol(headers, "company", "empresa") : 0;
+  const tickerIdx = findCol(headers, "ticker");
+  const weightIdx = findCol(headers, "weight", "peso");
+  const priceIdx = findCol(headers, "price", "precio");
+  const targetIdx = findCol(headers, "p.o");
+  const cagrIdx = findCol(headers, "cagr");
+  const currencyIdx = findCol(headers, "currency", "moneda");
+  const geoIdx = findCol(headers, "geography", "geograf");
+  const riskIdx = findCol(headers, "risk", "riesgo");
+  const detailIdx = findCol(headers, "detail", "detalle");
+  const thesisIdx = findCol(headers, "research", "tesis");
+  const modelIdx = findCol(headers, "model", "modelo");
+  const ageIdx = findCol(headers, "age", "antigüedad", "antiguedad");
+
+  // Parse helpers
+  const parseNum = (s: string | undefined) => {
+    if (!s) return NaN;
+    return parseFloat(s.replace(",", ".").replace("%", "").replace(/[$€£]/g, "").replace(/,/g, ""));
+  };
+
+  // Filter active positions (exclude liquidity)
+  const activeRows = rows.filter(r => {
+    const name = r[nameIdx]?.toLowerCase() || "";
+    const w = weightIdx !== -1 ? parseNum(r[weightIdx]) : 0;
+    return !name.includes("liquid") && !isNaN(w) && w > 0;
+  });
+
+  const totalPositions = activeRows.length;
+  const liquidityRow = rows.find(r => r[nameIdx]?.toLowerCase().includes("liquid"));
+  const liquidityPct = liquidityRow && weightIdx !== -1 ? (liquidityRow[weightIdx]?.trim() || "—") : "—";
+
+  // Weighted CAGR
+  let weightedCagr = 0;
+  let totalWeightWithCagr = 0;
+  activeRows.forEach(row => {
+    const w = weightIdx !== -1 ? parseNum(row[weightIdx]) : 0;
+    const c = cagrIdx !== -1 ? parseNum(row[cagrIdx]) : NaN;
+    if (!isNaN(w) && !isNaN(c)) {
+      weightedCagr += w * c;
+      totalWeightWithCagr += w;
+    }
+  });
+  const avgCagr = totalWeightWithCagr > 0 ? weightedCagr / totalWeightWithCagr : 0;
+  const pctWithTarget = totalWeightWithCagr > 0
+    ? `${((totalWeightWithCagr / activeRows.reduce((s, r) => s + (parseNum(r[weightIdx]) || 0), 0)) * 100).toFixed(1)}% of portfolio with P.O.`
+    : "";
+
+  // Weighted Risk
+  let weightedRisk = 0;
+  let totalWeightWithRisk = 0;
+  activeRows.forEach(row => {
+    const w = weightIdx !== -1 ? parseNum(row[weightIdx]) : 0;
+    const risk = riskIdx !== -1 ? parseInt(row[riskIdx]) : NaN;
+    if (!isNaN(w) && !isNaN(risk)) {
+      weightedRisk += w * risk;
+      totalWeightWithRisk += w;
+    }
+  });
+  const avgRisk = totalWeightWithRisk > 0 ? weightedRisk / totalWeightWithRisk : 0;
+
+  // Pie data
+  const pieData = activeRows
     .map(r => ({
       name: (tickerIdx !== -1 ? r[tickerIdx] : r[nameIdx]?.split(" ")[0]) || "—",
       fullName: r[nameIdx] || "—",
-      value: parseFloat(r[weightIdx]?.replace(",", ".").replace("%", "")) || 0,
+      value: parseNum(r[weightIdx]) || 0,
     }))
     .sort((a, b) => b.value - a.value);
-
-  const totalPositions = rows.filter(r => {
-    const w = weightIdx !== -1 ? parseFloat(r[weightIdx]?.replace(",", ".").replace("%", "")) : 0;
-    return !isNaN(w) && w > 0;
-  }).length;
-
-  const liquidityRow = rows.find(r => r[nameIdx]?.toLowerCase().includes("liquid"));
-  const liquidityPct = liquidityRow && weightIdx !== -1 ? liquidityRow[weightIdx] : "—";
 
   const hasLinks = thesisIdx !== -1 || modelIdx !== -1;
 
@@ -82,17 +125,21 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
       {/* Summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active Positions</p>
-          <p className="mt-1 font-display text-2xl font-bold text-foreground">{totalPositions}</p>
-          <p className="text-xs text-muted-foreground">{rows.length} total securities</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weighted Expected CAGR</p>
+          <p className={`mt-1 font-display text-2xl font-bold ${avgCagr >= 0 ? "text-success" : "text-destructive"}`}>
+            {avgCagr >= 0 ? "+" : ""}{avgCagr.toFixed(1)}%
+          </p>
+          <p className="text-xs text-muted-foreground">{pctWithTarget}</p>
         </Card>
         <Card className="border-border bg-card p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Liquidity</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">{liquidityPct}</p>
+          <p className="text-xs text-muted-foreground">{totalPositions} active positions</p>
         </Card>
         <Card className="border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Securities</p>
-          <p className="mt-1 font-display text-2xl font-bold text-foreground">{rows.length}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weighted Average Risk</p>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">{avgRisk.toFixed(1)}<span className="text-base font-normal text-muted-foreground">/10</span></p>
+          <p className="text-xs text-muted-foreground">weighted by position size</p>
         </Card>
       </div>
 
@@ -164,7 +211,7 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
           <tbody>
             {rows.map((row, i) => {
               const cagr = cagrIdx !== -1 ? row[cagrIdx] : "";
-              const cagrNum = parseFloat(cagr.replace(",", ".").replace("%", ""));
+              const cagrNum = parseNum(cagr);
               const isPositive = !isNaN(cagrNum) && cagrNum > 0;
               const ticker = tickerIdx !== -1 ? row[tickerIdx] : "";
               const thesisUrl = thesisIdx !== -1 ? row[thesisIdx]?.trim() : "";
