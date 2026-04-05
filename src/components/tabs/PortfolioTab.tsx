@@ -51,8 +51,8 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
   const geoIdx = getColIdx(headers, "geograf");
   const riskIdx = getColIdx(headers, "riesgo");
   const detailIdx = getColIdx(headers, "detalle");
-  const thesisIdx = getColIdx(headers, "tesis");
-  const modelIdx = getColIdx(headers, "modelo");
+  const thesisIdx = getColIdx(headers, "research") !== -1 ? getColIdx(headers, "research") : getColIdx(headers, "tesis");
+  const modelIdx = getColIdx(headers, "model") !== -1 ? getColIdx(headers, "model") : getColIdx(headers, "modelo");
   const ageIdx = getColIdx(headers, "antigüedad") !== -1 ? getColIdx(headers, "antigüedad") : getColIdx(headers, "antiguedad");
 
   const pieData = rows
