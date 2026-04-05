@@ -1,4 +1,4 @@
-import { SheetData, getColIdx } from "@/lib/googleSheets";
+import { SheetData } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -7,18 +7,10 @@ import {
 import { useState, useMemo } from "react";
 import { TrendingUp, TrendingDown, BarChart3, Activity } from "lucide-react";
 
-interface BenchmarkLive {
-  sp500Ytd: number | null;
-  nasdaqYtd: number | null;
-  sp500Current: number | null;
-  nasdaqCurrent: number | null;
-  lastUpdated: string;
-}
-
 interface Props {
   rentabilidadData: SheetData | null;
   loading: boolean;
-  benchmarks?: BenchmarkLive | null;
+  benchmarks?: any;
 }
 
 const PERIOD_FILTERS = ["YTD", "1Y", "2Y", "3Y", "Since Inception", "Annualized CAGR"];
@@ -29,76 +21,140 @@ function parseVal(s: string | undefined): number {
   return parseFloat(s.replace(",", ".").replace("%", "").replace("+", "")) || 0;
 }
 
-export default function RentabilidadTab({ rentabilidadData, loading, benchmarks }: Props) {
+function formatPct(n: number): string {
+  const sign = n >= 0 ? "+" : "";
+  return `${sign}${n.toFixed(2)}%`;
+}
+
+/** Compound multiple annual returns: (1+r1)*(1+r2)*…-1, where r is in % */
+function compoundReturns(returns: number[]): number {
+  if (returns.length === 0) return 0;
+  const product = returns.reduce((acc, r) => acc * (1 + r / 100), 1);
+  return (product - 1) * 100;
+}
+
+/** CAGR from annual returns */
+function annualizedCagr(returns: number[]): number {
+  if (returns.length === 0) return 0;
+  const product = returns.reduce((acc, r) => acc * (1 + r / 100), 1);
+  return (Math.pow(product, 1 / returns.length) - 1) * 100;
+}
+
+interface ParsedRow {
+  name: string;
+  portfolio: number;
+  sp500: number;
+  nasdaq: number;
+  rawPortfolio: string;
+  rawSp500: string;
+  rawNasdaq: string;
+  isYtd: boolean;
+  year: number | null;
+}
+
+export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
   const [activePeriod, setActivePeriod] = useState("Since Inception");
   const [chartType, setChartType] = useState<ChartType>("bar");
 
-  // Parse all rows into structured data
-  const allData = useMemo(() => {
+  const allData = useMemo<ParsedRow[]>(() => {
     if (!rentabilidadData || rentabilidadData.rows.length === 0) return [];
-    const { rows } = rentabilidadData;
-    return rows
+    return rentabilidadData.rows
       .filter(r => r[0] && !r[0].startsWith("NOTE"))
-      .map(r => ({
-        name: r[0]?.trim() || "",
-        portfolio: parseVal(r[1]),
-        sp500: parseVal(r[2]),
-        nasdaq: parseVal(r[3]),
-        rawPortfolio: r[1]?.trim() || "",
-        rawSp500: r[2]?.trim() || "",
-        rawNasdaq: r[3]?.trim() || "",
-      }));
+      .map(r => {
+        const name = r[0]?.trim() || "";
+        const isYtd = name.toLowerCase().startsWith("ytd");
+        const yearMatch = name.match(/\d{4}/);
+        return {
+          name,
+          portfolio: parseVal(r[1]),
+          sp500: parseVal(r[2]),
+          nasdaq: parseVal(r[3]),
+          rawPortfolio: r[1]?.trim() || "",
+          rawSp500: r[2]?.trim() || "",
+          rawNasdaq: r[3]?.trim() || "",
+          isYtd,
+          year: yearMatch ? parseInt(yearMatch[0]) : null,
+        };
+      });
   }, [rentabilidadData]);
 
-  // Find specific rows
-  const findRow = (keyword: string) => allData.find(d => d.name.toLowerCase().includes(keyword.toLowerCase()));
+  const ytdRow = allData.find(d => d.isYtd);
+  // Full-year rows sorted ascending by year
+  const yearRows = useMemo(
+    () => allData.filter(d => !d.isYtd && d.year !== null).sort((a, b) => (a.year! - b.year!)),
+    [allData]
+  );
 
-  const ytdRow = findRow("YTD");
-  const cagrRow = findRow("CAGR");
-  const sinceInceptionRow = findRow("Since Inception") || findRow("Inception");
-  const yearRows = allData.filter(d => /^\d{4}$/.test(d.name));
-
-  // Filtered chart data based on period
-  const filteredChartData = useMemo(() => {
+  // Compute summary & chart data for each period
+  const { summaryCards, chartData } = useMemo(() => {
     const currentYear = new Date().getFullYear();
-    switch (activePeriod) {
-      case "YTD":
-        return ytdRow ? [ytdRow] : [];
-      case "1Y":
-        return yearRows.filter(d => parseInt(d.name) >= currentYear - 1).concat(ytdRow ? [ytdRow] : []);
-      case "2Y":
-        return yearRows.filter(d => parseInt(d.name) >= currentYear - 2).concat(ytdRow ? [ytdRow] : []);
-      case "3Y":
-        return yearRows.filter(d => parseInt(d.name) >= currentYear - 3).concat(ytdRow ? [ytdRow] : []);
-      case "Annualized CAGR":
-        return cagrRow ? [cagrRow] : [];
-      case "Since Inception":
-      default:
-        return [...yearRows, ...(ytdRow ? [ytdRow] : [])];
-    }
-  }, [allData, activePeriod, ytdRow, cagrRow, yearRows]);
 
-  // Dynamic summary cards based on selected period
-  const summaryCards = useMemo(() => {
-    let targetRow = ytdRow; // default
-    switch (activePeriod) {
-      case "YTD": targetRow = ytdRow; break;
-      case "1Y": targetRow = yearRows.length > 0 ? yearRows[yearRows.length - 1] : ytdRow; break;
-      case "Since Inception": targetRow = sinceInceptionRow || ytdRow; break;
-      case "Annualized CAGR": targetRow = cagrRow; break;
-      case "2Y":
-      case "3Y":
-        targetRow = ytdRow;
-        break;
-    }
-    if (!targetRow) return [];
-    return [
-      { label: "Period", value: targetRow.name },
-      { label: "Portfolio %", value: targetRow.rawPortfolio, num: targetRow.portfolio },
-      { label: "S&P 500 %", value: targetRow.rawSp500, num: targetRow.sp500 },
-      { label: "Nasdaq-100 %", value: targetRow.rawNasdaq, num: targetRow.nasdaq },
+    const buildSummary = (label: string, portfolio: number, sp500: number, nasdaq: number) => [
+      { label: "Period", value: label, num: undefined as number | undefined },
+      { label: "Portfolio %", value: formatPct(portfolio), num: portfolio },
+      { label: "S&P 500 %", value: formatPct(sp500), num: sp500 },
+      { label: "Nasdaq-100 %", value: formatPct(nasdaq), num: nasdaq },
     ];
-  }, [activePeriod, ytdRow, cagrRow, sinceInceptionRow, yearRows]);
+
+    switch (activePeriod) {
+      case "YTD": {
+        if (!ytdRow) return { summaryCards: [], chartData: [] };
+        return {
+          summaryCards: buildSummary(ytdRow.name, ytdRow.portfolio, ytdRow.sp500, ytdRow.nasdaq),
+          chartData: [ytdRow],
+        };
+      }
+      case "1Y": {
+        // Most recent complete year
+        const row = yearRows.length > 0 ? yearRows[yearRows.length - 1] : null;
+        if (!row) return { summaryCards: [], chartData: [] };
+        return {
+          summaryCards: buildSummary(row.name, row.portfolio, row.sp500, row.nasdaq),
+          chartData: [row],
+        };
+      }
+      case "2Y":
+      case "3Y": {
+        const n = activePeriod === "2Y" ? 2 : 3;
+        const recentYears = yearRows.filter(d => d.year! >= currentYear - n);
+        const p = compoundReturns(recentYears.map(d => d.portfolio));
+        const s = compoundReturns(recentYears.map(d => d.sp500));
+        const q = compoundReturns(recentYears.map(d => d.nasdaq));
+        const label = recentYears.length > 0
+          ? `${recentYears[0].name}–${recentYears[recentYears.length - 1].name}`
+          : activePeriod;
+        return {
+          summaryCards: buildSummary(label, p, s, q),
+          chartData: recentYears,
+        };
+      }
+      case "Since Inception": {
+        const all = [...yearRows, ...(ytdRow ? [ytdRow] : [])];
+        const p = compoundReturns(all.map(d => d.portfolio));
+        const s = compoundReturns(all.map(d => d.sp500));
+        const q = compoundReturns(all.map(d => d.nasdaq));
+        const label = all.length > 0
+          ? `${all[0].name}–${all[all.length - 1].name}`
+          : "Since Inception";
+        return {
+          summaryCards: buildSummary(label, p, s, q),
+          chartData: all,
+        };
+      }
+      case "Annualized CAGR": {
+        const all = [...yearRows, ...(ytdRow ? [ytdRow] : [])];
+        const p = annualizedCagr(all.map(d => d.portfolio));
+        const s = annualizedCagr(all.map(d => d.sp500));
+        const q = annualizedCagr(all.map(d => d.nasdaq));
+        return {
+          summaryCards: buildSummary("CAGR (Annualized)", p, s, q),
+          chartData: [{ name: "CAGR", portfolio: p, sp500: s, nasdaq: q, rawPortfolio: formatPct(p), rawSp500: formatPct(s), rawNasdaq: formatPct(q), isYtd: false, year: null }],
+        };
+      }
+      default:
+        return { summaryCards: [], chartData: [] };
+    }
+  }, [allData, activePeriod, ytdRow, yearRows]);
 
   if (loading) return <LoadingSkeleton />;
   if (!rentabilidadData || rentabilidadData.rows.length === 0) return <EmptyState />;
@@ -159,7 +215,7 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
         </div>
       </div>
 
-      {/* Summary cards - dynamic based on period */}
+      {/* Summary cards */}
       {summaryCards.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           {summaryCards.map((card, i) => {
@@ -193,14 +249,14 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
       )}
 
       {/* Chart */}
-      {filteredChartData.length > 0 && (
+      {chartData.length > 0 && (
         <Card className="border-border bg-card p-5 transition-all hover:shadow-md">
           <h3 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Comparison — {activePeriod}
           </h3>
           <ResponsiveContainer width="100%" height={340}>
             {chartType === "bar" ? (
-              <BarChart data={filteredChartData}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
                 <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={v => `${v}%`} />
@@ -211,7 +267,7 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
                 <Bar dataKey="nasdaq" name="Nasdaq-100" fill={chartColors.nasdaq} radius={[4, 4, 0, 0]} />
               </BarChart>
             ) : chartType === "line" ? (
-              <LineChart data={filteredChartData}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
                 <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={v => `${v}%`} />
@@ -222,7 +278,7 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
                 <Line type="monotone" dataKey="nasdaq" name="Nasdaq-100" stroke={chartColors.nasdaq} strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             ) : (
-              <AreaChart data={filteredChartData}>
+              <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
                 <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={v => `${v}%`} />
@@ -237,7 +293,7 @@ export default function RentabilidadTab({ rentabilidadData, loading, benchmarks 
         </Card>
       )}
 
-      {filteredChartData.length === 0 && (
+      {chartData.length === 0 && (
         <Card className="flex h-40 items-center justify-center border-border bg-card">
           <p className="text-muted-foreground">No data available for "{activePeriod}"</p>
         </Card>
