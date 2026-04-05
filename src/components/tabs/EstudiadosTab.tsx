@@ -11,7 +11,7 @@ export default function EstudiadosTab({ data, loading }: Props) {
   if (!data || data.rows.length === 0) {
     return (
       <Card className="flex h-64 items-center justify-center border-border bg-card">
-        <p className="text-muted-foreground">No se encontró la hoja "Estudiados"</p>
+        <p className="text-muted-foreground">No "Watchlist" sheet found</p>
       </Card>
     );
   }
@@ -31,21 +31,21 @@ export default function EstudiadosTab({ data, loading }: Props) {
       <Card className="overflow-x-auto border-border bg-card p-4">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Valores estudiados — fuera de cartera
+            Researched securities — not in portfolio
           </h3>
           <span className="text-xs text-muted-foreground">
-            {rows.length} empresas · {withTarget} con P.O.
+            {rows.length} companies · {withTarget} with target price
           </span>
         </div>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Empresa</th>
-              {currencyIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Moneda</th>}
-              {priceIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio actual</th>}
-              {targetIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">P.O. 3A</th>}
-              {cagrIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">CAGR 3A</th>}
-              {riskIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Riesgo</th>}
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
+              {currencyIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Currency</th>}
+              {priceIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Price</th>}
+              {targetIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">3Y Target</th>}
+              {cagrIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">3Y CAGR</th>}
+              {riskIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risk</th>}
             </tr>
           </thead>
           <tbody>
