@@ -25,8 +25,8 @@ export default function EstudiadosTab({ data, loading }: Props) {
   const targetIdx = getColIdx(headers, "p.o");
   const cagrIdx = getColIdx(headers, "cagr");
   const riskIdx = getColIdx(headers, "riesgo");
-  const thesisIdx = getColIdx(headers, "tesis");
-  const modelIdx = getColIdx(headers, "modelo");
+  const thesisIdx = getColIdx(headers, "research") !== -1 ? getColIdx(headers, "research") : getColIdx(headers, "tesis");
+  const modelIdx = getColIdx(headers, "model") !== -1 ? getColIdx(headers, "model") : getColIdx(headers, "modelo");
 
   const withTarget = rows.filter(r => targetIdx !== -1 && r[targetIdx]?.trim()).length;
   const hasLinks = thesisIdx !== -1 || modelIdx !== -1;
