@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { fetchSheet, SheetData } from "@/lib/googleSheets";
+import { fetchBenchmarks } from "@/lib/benchmarks";
 import DashboardHeader from "./DashboardHeader";
 import RentabilidadTab from "./tabs/RentabilidadTab";
 import PortfolioTab from "./tabs/PortfolioTab";
@@ -31,6 +32,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("rentabilidad");
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState("");
+  const [benchmarks, setBenchmarks] = useState<any>(null);
   const [data, setData] = useState<Record<TabKey, SheetData | null>>({
     rentabilidad: null,
     portfolio: null,
@@ -43,25 +45,24 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
     const now = new Date();
     setLastUpdate(now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
 
-    const results: Record<string, SheetData | null> = {};
-
-    await Promise.all(
-      (Object.keys(SHEET_NAMES) as TabKey[]).map(async (tab) => {
-        for (const name of SHEET_NAMES[tab]) {
-          try {
-            const sheet = await fetchSheet(sheetId, name);
-            if (sheet.rows.length > 0) {
-              results[tab] = sheet;
-              return;
-            }
-          } catch {
-            // Try next name
+    const [sheetResults, benchmarkData] = await Promise.all([
+      Promise.all(
+        (Object.keys(SHEET_NAMES) as TabKey[]).map(async (tab) => {
+          for (const name of SHEET_NAMES[tab]) {
+            try {
+              const sheet = await fetchSheet(sheetId, name);
+              if (sheet.rows.length > 0) return { tab, sheet };
+            } catch { /* Try next */ }
           }
-        }
-        results[tab] = null;
-      })
-    );
+          return { tab, sheet: null };
+        })
+      ),
+      fetchBenchmarks(),
+    ]);
 
+    const results: Record<string, SheetData | null> = {};
+    sheetResults.forEach(({ tab, sheet }) => { results[tab] = sheet; });
+    setBenchmarks(benchmarkData);
     setData(results as Record<TabKey, SheetData | null>);
     setLoading(false);
   }, [sheetId]);
@@ -101,7 +102,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
       {/* Tab content */}
       <main className="container py-6">
         {activeTab === "rentabilidad" && (
-          <RentabilidadTab rentabilidadData={data.rentabilidad} loading={loading} />
+          <RentabilidadTab rentabilidadData={data.rentabilidad} loading={loading} benchmarks={benchmarks} />
         )}
         {activeTab === "portfolio" && (
           <PortfolioTab portfolioData={data.portfolio} loading={loading} />
