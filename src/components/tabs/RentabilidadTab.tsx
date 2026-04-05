@@ -96,7 +96,7 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
   );
 }
 
-function extractSummaryCards(headers: string[], rows: string[]) {
+function extractSummaryCards(headers: string[], rows: string[][]) {
   // Attempt to find portfolio, S&P, Nasdaq returns from first row
   const cards: { label: string; value: string; sub?: string }[] = [];
   if (rows.length === 0) return cards;
