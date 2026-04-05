@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { RefreshCw, LogOut } from "lucide-react";
+import { RefreshCw, LogOut, Sun, Moon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface DashboardHeaderProps {
   lastUpdate: string;
@@ -9,6 +10,19 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ lastUpdate, onRefresh, onLogout, loading }: DashboardHeaderProps) {
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("theme") === "dark" || 
+        (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  }, [dark]);
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="container flex h-14 items-center justify-between">
@@ -23,6 +37,15 @@ export default function DashboardHeader({ lastUpdate, onRefresh, onLogout, loadi
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="hidden sm:inline">Updated {lastUpdate}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDark(!dark)}
+            className="h-8 w-8 p-0"
+            title={dark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {dark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          </Button>
           <Button
             variant="outline"
             size="sm"
