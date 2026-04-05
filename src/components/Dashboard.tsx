@@ -47,7 +47,23 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
 
     const results: Record<string, SheetData | null> = {};
 
-    await Promise.all(
+    const [sheetResults, benchmarkData] = await Promise.all([
+      Promise.all(
+        (Object.keys(SHEET_NAMES) as TabKey[]).map(async (tab) => {
+          for (const name of SHEET_NAMES[tab]) {
+            try {
+              const sheet = await fetchSheet(sheetId, name);
+              if (sheet.rows.length > 0) return { tab, sheet };
+            } catch { /* Try next */ }
+          }
+          return { tab, sheet: null };
+        })
+      ),
+      fetchBenchmarks(),
+    ]);
+
+    const results: Record<string, SheetData | null> = {};
+    sheetResults.forEach(({ tab, sheet }) => { results[tab] = sheet; });
       (Object.keys(SHEET_NAMES) as TabKey[]).map(async (tab) => {
         for (const name of SHEET_NAMES[tab]) {
           try {
