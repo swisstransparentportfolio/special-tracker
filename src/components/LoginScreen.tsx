@@ -9,7 +9,7 @@ interface LoginScreenProps {
 }
 
 const CORRECT_PASSWORD = "suscriptores2026";
-const DEFAULT_SHEET_ID = "1p8dGFb-qsIEEmW3ApWyosx3TZsBsGFzd";
+const DEFAULT_SHEET_ID = "1i6k_807-JF8YIUEROyAl7edr7RFWwALy";
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [password, setPassword] = useState("");
