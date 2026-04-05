@@ -84,7 +84,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
                 value={sheetId}
                 onChange={e => setSheetId(e.target.value)}
                 className="mt-2 bg-secondary border-border font-mono text-xs"
-                placeholder="1sRkg-yB94zBcvlBuwPsR8DAOpAL-..."
+                placeholder="URL o ID del Google Sheet"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 Compartido como "Cualquiera con el enlace puede ver"
