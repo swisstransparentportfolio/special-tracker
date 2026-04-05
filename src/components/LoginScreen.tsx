@@ -16,6 +16,15 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [sheetId, setSheetId] = useState(DEFAULT_SHEET_ID);
   const [error, setError] = useState("");
 
+  const extractSheetId = (input: string): string => {
+    const trimmed = input.trim();
+    // Match the ID from a full Google Sheets URL
+    const match = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+    // Otherwise assume it's already a raw ID
+    return trimmed;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== CORRECT_PASSWORD) {
@@ -23,11 +32,11 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       return;
     }
     if (!sheetId.trim()) {
-      setError("Introduce el ID de Google Sheet");
+      setError("Introduce el ID o URL de Google Sheet");
       return;
     }
     setError("");
-    onLogin(sheetId.trim());
+    onLogin(extractSheetId(sheetId));
   };
 
   return (
@@ -75,7 +84,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
                 value={sheetId}
                 onChange={e => setSheetId(e.target.value)}
                 className="mt-2 bg-secondary border-border font-mono text-xs"
-                placeholder="1sRkg-yB94zBcvlBuwPsR8DAOpAL-..."
+                placeholder="URL o ID del Google Sheet"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 Compartido como "Cualquiera con el enlace puede ver"
