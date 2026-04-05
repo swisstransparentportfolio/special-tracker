@@ -276,10 +276,6 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
   );
 }
 
-function r(val: string | undefined): string {
-  return val?.trim() || "—";
-}
-
 function RiskBadge({ value }: { value: string }) {
   const num = parseInt(value);
   if (isNaN(num)) return <span className="text-muted-foreground">—</span>;
