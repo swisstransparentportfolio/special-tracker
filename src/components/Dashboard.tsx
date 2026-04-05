@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { fetchSheet, SheetData } from "@/lib/googleSheets";
+import { fetchBenchmarks } from "@/lib/benchmarks";
 import DashboardHeader from "./DashboardHeader";
 import RentabilidadTab from "./tabs/RentabilidadTab";
 import PortfolioTab from "./tabs/PortfolioTab";
