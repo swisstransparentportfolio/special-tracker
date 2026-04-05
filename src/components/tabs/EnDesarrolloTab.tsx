@@ -1,32 +1,22 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
-import { FileText, Search, BarChart3, Lightbulb, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Clock, CheckCircle, AlertCircle, Search } from "lucide-react";
 
 interface Props {
   data: SheetData | null;
   loading: boolean;
 }
 
-const TYPE_CONFIG: Record<string, { icon: typeof FileText; color: string; bg: string }> = {
-  tesis: { icon: Search, color: "text-muted-foreground", bg: "bg-secondary border-border" },
-  thesis: { icon: Search, color: "text-muted-foreground", bg: "bg-secondary border-border" },
-  artículo: { icon: FileText, color: "text-primary", bg: "bg-primary/10 border-primary/30" },
-  articulo: { icon: FileText, color: "text-primary", bg: "bg-primary/10 border-primary/30" },
-  article: { icon: FileText, color: "text-primary", bg: "bg-primary/10 border-primary/30" },
-  investigación: { icon: Lightbulb, color: "text-success", bg: "bg-success/10 border-success/30" },
-  research: { icon: Lightbulb, color: "text-success", bg: "bg-success/10 border-success/30" },
-  "modelo financiero": { icon: BarChart3, color: "text-muted-foreground", bg: "bg-secondary border-border" },
-  "financial model": { icon: BarChart3, color: "text-muted-foreground", bg: "bg-secondary border-border" },
+const STATUS_CONFIG: Record<string, { icon: typeof Clock; className: string }> = {
+  "in progress": { icon: Clock, className: "text-primary" },
+  "completed": { icon: CheckCircle, className: "text-success" },
+  "pending": { icon: AlertCircle, className: "text-muted-foreground" },
 };
 
-const STATUS_CONFIG: Record<string, { icon: typeof Clock; className: string }> = {
-  "en progreso": { icon: Clock, className: "text-primary" },
-  "in progress": { icon: Clock, className: "text-primary" },
-  completado: { icon: CheckCircle, className: "text-success" },
-  completed: { icon: CheckCircle, className: "text-success" },
-  done: { icon: CheckCircle, className: "text-success" },
-  pendiente: { icon: AlertCircle, className: "text-muted-foreground" },
-  pending: { icon: AlertCircle, className: "text-muted-foreground" },
+const PRIORITY_COLORS: Record<string, string> = {
+  "high": "bg-destructive/15 text-destructive",
+  "medium": "bg-primary/15 text-primary",
+  "low": "bg-muted text-muted-foreground",
 };
 
 export default function EnDesarrolloTab({ data, loading }: Props) {
@@ -40,35 +30,37 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
   }
 
   const { headers, rows } = data;
-  const titleIdx = getColIdx(headers, "título") !== -1 ? getColIdx(headers, "título") : getColIdx(headers, "titulo") !== -1 ? getColIdx(headers, "titulo") : getColIdx(headers, "title") !== -1 ? getColIdx(headers, "title") : 0;
-  const typeIdx = getColIdx(headers, "tipo") !== -1 ? getColIdx(headers, "tipo") : getColIdx(headers, "type");
-  const dateIdx = getColIdx(headers, "fecha") !== -1 ? getColIdx(headers, "fecha") : getColIdx(headers, "date");
-  const statusIdx = getColIdx(headers, "estado") !== -1 ? getColIdx(headers, "estado") : getColIdx(headers, "status");
-  const descIdx = getColIdx(headers, "descripci") !== -1 ? getColIdx(headers, "descripci") : getColIdx(headers, "description");
+  const nameIdx = getColIdx(headers, "company") !== -1 ? getColIdx(headers, "company") : 0;
+  const tickerIdx = getColIdx(headers, "ticker");
+  const sectorIdx = getColIdx(headers, "sector");
+  const typeIdx = getColIdx(headers, "type");
+  const statusIdx = getColIdx(headers, "status");
+  const priorityIdx = getColIdx(headers, "priority");
+  const notesIdx = getColIdx(headers, "notes");
 
-  const typeCounts: Record<string, number> = {};
+  const statusCounts: Record<string, number> = {};
   rows.forEach(r => {
-    const t = typeIdx !== -1 ? r[typeIdx]?.toLowerCase().trim() : "";
-    if (t) typeCounts[t] = (typeCounts[t] || 0) + 1;
+    const s = statusIdx !== -1 ? r[statusIdx]?.trim() : "";
+    if (s) statusCounts[s] = (statusCounts[s] || 0) + 1;
   });
 
   return (
     <div className="animate-fade-in space-y-6">
-      {/* Summary bar */}
+      {/* Summary */}
       <Card className="border-border bg-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Research Pipeline</h3>
-            <p className="mt-1 font-display text-2xl font-bold text-foreground">{rows.length} <span className="text-base font-normal text-muted-foreground">items in progress</span></p>
+            <p className="mt-1 font-display text-2xl font-bold text-foreground">{rows.length} <span className="text-base font-normal text-muted-foreground">companies tracked</span></p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(typeCounts).map(([type, count]) => {
-              const cfg = TYPE_CONFIG[type] || TYPE_CONFIG["article"]!;
-              const Icon = cfg.icon;
+            {Object.entries(statusCounts).map(([status, count]) => {
+              const cfg = STATUS_CONFIG[status.toLowerCase()];
+              const Icon = cfg?.icon || Search;
               return (
-                <span key={type} className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${cfg.bg} ${cfg.color}`}>
+                <span key={status} className={`flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium ${cfg?.className || "text-muted-foreground"}`}>
                   <Icon className="h-3 w-3" />
-                  {type.charAt(0).toUpperCase() + type.slice(1)}: {count}
+                  {status}: {count}
                 </span>
               );
             })}
@@ -76,37 +68,39 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
         </div>
       </Card>
 
-      {/* Pipeline table */}
+      {/* Table */}
       <Card className="overflow-x-auto border-border bg-card p-4">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b-2 border-border">
-              <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
+              {sectorIdx !== -1 && <th className="hidden px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Sector</th>}
               {typeIdx !== -1 && <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>}
               {statusIdx !== -1 && <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>}
-              {dateIdx !== -1 && <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>}
-              {descIdx !== -1 && <th className="hidden px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Description</th>}
+              {priorityIdx !== -1 && <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Priority</th>}
+              {notesIdx !== -1 && <th className="hidden px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Notes</th>}
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) => {
-              const type = typeIdx !== -1 ? row[typeIdx]?.toLowerCase().trim() : "";
-              const cfg = TYPE_CONFIG[type] || TYPE_CONFIG["article"]!;
-              const Icon = cfg.icon;
-              const status = statusIdx !== -1 ? row[statusIdx]?.toLowerCase().trim() : "";
-              const statusCfg = STATUS_CONFIG[status];
+              const ticker = tickerIdx !== -1 ? row[tickerIdx] : "";
+              const status = statusIdx !== -1 ? row[statusIdx]?.trim() : "";
+              const priority = priorityIdx !== -1 ? row[priorityIdx]?.trim() : "";
+              const statusCfg = STATUS_CONFIG[status.toLowerCase()];
               const StatusIcon = statusCfg?.icon || Clock;
+              const priorityClass = PRIORITY_COLORS[priority.toLowerCase()] || "bg-muted text-muted-foreground";
 
               return (
                 <tr key={i} className="border-b border-border/30 transition-colors hover:bg-secondary/30">
                   <td className="px-3 py-3.5">
-                    <span className="font-medium text-foreground">{row[titleIdx]}</span>
+                    <div className="font-medium text-foreground">{row[nameIdx]}</div>
+                    {ticker && <div className="text-xs text-muted-foreground">{ticker}</div>}
                   </td>
+                  {sectorIdx !== -1 && <td className="hidden px-3 py-3.5 text-muted-foreground md:table-cell">{row[sectorIdx]}</td>}
                   {typeIdx !== -1 && (
                     <td className="px-3 py-3.5 text-center">
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.bg} ${cfg.color}`}>
-                        <Icon className="h-3 w-3" />
-                        {row[typeIdx]}
+                      <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                        {row[typeIdx] || "—"}
                       </span>
                     </td>
                   )}
@@ -114,18 +108,20 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
                     <td className="px-3 py-3.5 text-center">
                       <span className={`inline-flex items-center gap-1 text-xs font-medium ${statusCfg?.className || "text-muted-foreground"}`}>
                         <StatusIcon className="h-3.5 w-3.5" />
-                        {row[statusIdx] || "—"}
+                        {status || "—"}
                       </span>
                     </td>
                   )}
-                  {dateIdx !== -1 && (
-                    <td className="px-3 py-3.5 text-right text-muted-foreground">
-                      {row[dateIdx] || "—"}
+                  {priorityIdx !== -1 && (
+                    <td className="px-3 py-3.5 text-center">
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityClass}`}>
+                        {priority || "—"}
+                      </span>
                     </td>
                   )}
-                  {descIdx !== -1 && (
+                  {notesIdx !== -1 && (
                     <td className="hidden px-3 py-3.5 text-muted-foreground md:table-cell max-w-xs truncate">
-                      {row[descIdx] || "—"}
+                      {row[notesIdx] || "—"}
                     </td>
                   )}
                 </tr>

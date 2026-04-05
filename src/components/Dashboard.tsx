@@ -22,10 +22,18 @@ const TABS = [
 type TabKey = typeof TABS[number]["key"];
 
 const SHEET_NAMES: Record<TabKey, string[]> = {
-  rentabilidad: ["Rentabilidad", "rentabilidad", "Returns", "Performance"],
+  rentabilidad: ["Performance", "Rentabilidad", "rentabilidad", "Returns"],
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
-  estudiados: ["Estudiados", "estudiados", "Watchlist", "Estudiadas"],
-  desarrollo: ["En desarrollo", "Desarrollo", "Pipeline", "En Desarrollo"],
+  estudiados: ["Watchlist", "Estudiados", "estudiados", "Estudiadas"],
+  desarrollo: ["Pipeline", "En desarrollo", "Desarrollo", "En Desarrollo"],
+};
+
+// Expected header keywords per tab to validate we got the right sheet
+const HEADER_VALIDATORS: Record<TabKey, string[]> = {
+  rentabilidad: ["period", "portfolio"],
+  portfolio: ["ticker", "weight", "peso", "company", "empresa"],
+  estudiados: ["ticker", "sector", "company", "empresa"],
+  desarrollo: ["status", "priority", "type", "tipo"],
 };
 
 export default function Dashboard({ sheetId, onLogout }: Props) {
