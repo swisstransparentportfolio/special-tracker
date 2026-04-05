@@ -89,7 +89,7 @@ export default function EstudiadosTab({ data, loading }: Props) {
                       <div className="flex items-center justify-end gap-1.5">
                         {thesisUrl && (
                           <a href={thesisUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded border border-success/30 bg-success/10 px-2.5 py-1 text-xs font-medium text-success hover:bg-success/20 transition-colors">
-                            <FileText className="h-3 w-3" /> Thesis
+                            <FileText className="h-3 w-3" /> Research
                           </a>
                         )}
                         {modelUrl && (
