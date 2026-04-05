@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { RefreshCw, LogOut, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
+import logoSp from "@/assets/logo-sp.jpg";
 
 interface DashboardHeaderProps {
   lastUpdate: string;
@@ -27,8 +28,9 @@ export default function DashboardHeader({ lastUpdate, onRefresh, onLogout, loadi
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-3">
+          <img src={logoSp} alt="Swiss Portfolio" className="h-9 w-9 rounded-md object-cover" />
           <h1 className="font-display text-lg font-bold text-foreground">
-            SwissTransparentPortfolio
+            Swiss Portfolio
           </h1>
           <span className="flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success">
             <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-dot" />
