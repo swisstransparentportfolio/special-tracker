@@ -48,6 +48,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
   const [data, setData] = useState<Record<TabKey, SheetData | null>>({
     rentabilidad: null,
     portfolio: null,
+    special: null,
     estudiados: null,
     desarrollo: null,
   });
