@@ -26,18 +26,14 @@ export default function DashboardHeader({ lastUpdate, onRefresh, onLogout, loadi
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
-      <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="container flex h-14 items-center justify-between gap-2 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <img src={logoSp} alt="Swiss Portfolio" className="h-9 w-9 rounded-md object-cover" />
-          <h1 className="font-display text-lg font-bold text-foreground">
+          <h1 className="font-display text-base sm:text-lg font-bold text-foreground whitespace-nowrap">
             Swiss Portfolio
           </h1>
-          <span className="flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success">
-            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-dot" />
-            Live
-          </span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-sm text-muted-foreground flex-shrink-0">
           <span className="hidden sm:inline">Updated {lastUpdate}</span>
           <Button
             variant="outline"
@@ -53,14 +49,14 @@ export default function DashboardHeader({ lastUpdate, onRefresh, onLogout, loadi
             size="sm"
             onClick={onRefresh}
             disabled={loading}
-            className="gap-1.5"
+            className="gap-1 sm:gap-1.5 px-2 sm:px-3"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={onLogout} className="gap-1.5">
+          <Button variant="outline" size="sm" onClick={onLogout} className="gap-1 sm:gap-1.5 px-2 sm:px-3">
             <LogOut className="h-3.5 w-3.5" />
-            Logout
+            <span className="hidden sm:inline">Logout</span>
           </Button>
         </div>
       </div>
