@@ -6,6 +6,7 @@ import RentabilidadTab from "./tabs/RentabilidadTab";
 import PortfolioTab from "./tabs/PortfolioTab";
 import EstudiadosTab from "./tabs/EstudiadosTab";
 import EnDesarrolloTab from "./tabs/EnDesarrolloTab";
+import SpecialSituationsTab from "./tabs/SpecialSituationsTab";
 
 interface Props {
   sheetId: string;
@@ -15,6 +16,7 @@ interface Props {
 const TABS = [
   { key: "rentabilidad", label: "Performance" },
   { key: "portfolio", label: "Portfolio" },
+  { key: "special", label: "Special Situations" },
   { key: "estudiados", label: "Watchlist" },
   { key: "desarrollo", label: "Pipeline" },
 ] as const;
@@ -24,6 +26,7 @@ type TabKey = typeof TABS[number]["key"];
 const SHEET_NAMES: Record<TabKey, string[]> = {
   rentabilidad: ["Performance", "Rentabilidad", "rentabilidad", "Returns"],
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
+  special: ["Special Situations", "Special", "Situaciones Especiales"],
   estudiados: ["Watchlist", "Estudiados", "estudiados", "Estudiadas"],
   desarrollo: ["Pipeline", "En desarrollo", "Desarrollo", "En Desarrollo"],
 };
@@ -32,6 +35,7 @@ const SHEET_NAMES: Record<TabKey, string[]> = {
 const HEADER_VALIDATORS: Record<TabKey, string[]> = {
   rentabilidad: ["period", "portfolio"],
   portfolio: ["ticker", "weight", "peso", "company", "empresa"],
+  special: ["name", "type", "tender", "expiration", "profit"],
   estudiados: ["ticker", "sector", "company", "empresa"],
   desarrollo: ["status", "priority", "type", "tipo"],
 };
@@ -44,6 +48,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
   const [data, setData] = useState<Record<TabKey, SheetData | null>>({
     rentabilidad: null,
     portfolio: null,
+    special: null,
     estudiados: null,
     desarrollo: null,
   });
@@ -123,6 +128,9 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
         )}
         {activeTab === "portfolio" && (
           <PortfolioTab portfolioData={data.portfolio} loading={loading} />
+        )}
+        {activeTab === "special" && (
+          <SpecialSituationsTab data={data.special} loading={loading} />
         )}
         {activeTab === "estudiados" && (
           <EstudiadosTab data={data.estudiados} loading={loading} />
