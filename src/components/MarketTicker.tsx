@@ -86,9 +86,26 @@ async function fetchAllQuotes(): Promise<TickerItem[]> {
   return allResults;
 }
 
+const CACHE_KEY = "marketTickerCache";
+
+function getCachedItems(): TickerItem[] {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {}
+  return [];
+}
+
+function setCachedItems(items: TickerItem[]) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(items));
+  } catch {}
+}
+
 export default function MarketTicker() {
-  const [items, setItems] = useState<TickerItem[]>([]);
+  const [items, setItems] = useState<TickerItem[]>(getCachedItems);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
   const posRef = useRef(0);
   const isDragging = useRef(false);
@@ -99,7 +116,10 @@ export default function MarketTicker() {
     let cancelled = false;
     async function load() {
       const results = await fetchAllQuotes();
-      if (!cancelled) setItems(results);
+      if (!cancelled && results.length > 0) {
+        setItems(results);
+        setCachedItems(results);
+      }
     }
     load();
     const interval = setInterval(load, 15 * 60_000);
@@ -112,12 +132,14 @@ export default function MarketTicker() {
     if (!el || items.length === 0) return;
 
     const speed = 0.5;
+    // One "set" width = total scrollWidth / repeatCount
+    const getSetWidth = () => el.scrollWidth / Math.max(3, Math.ceil(2400 / (items.length * 200)) + 1);
 
     function tick() {
       if (!isDragging.current && el) {
         posRef.current += speed;
-        const halfWidth = el.scrollWidth / 2;
-        if (halfWidth > 0 && posRef.current >= halfWidth) posRef.current -= halfWidth;
+        const setWidth = getSetWidth();
+        if (setWidth > 0 && posRef.current >= setWidth) posRef.current -= setWidth;
         el.style.transform = `translateX(-${posRef.current}px)`;
       }
       animRef.current = requestAnimationFrame(tick);
@@ -141,14 +163,15 @@ export default function MarketTicker() {
     if (!el) return;
     const diff = dragStartX.current - e.clientX;
     let newPos = dragStartPos.current + diff;
-    const halfWidth = el.scrollWidth / 2;
-    if (halfWidth > 0) {
-      while (newPos < 0) newPos += halfWidth;
-      while (newPos >= halfWidth) newPos -= halfWidth;
+    const repeatCount = Math.max(3, Math.ceil(2400 / (items.length * 200)) + 1);
+    const setWidth = el.scrollWidth / repeatCount;
+    if (setWidth > 0) {
+      while (newPos < 0) newPos += setWidth;
+      while (newPos >= setWidth) newPos -= setWidth;
     }
     posRef.current = newPos;
     el.style.transform = `translateX(-${posRef.current}px)`;
-  }, []);
+  }, [items.length]);
 
   const handlePointerUp = useCallback(() => {
     isDragging.current = false;
@@ -156,10 +179,16 @@ export default function MarketTicker() {
 
   if (items.length === 0) return null;
 
-  const displayed = [...items, ...items];
+  // Repeat items enough times to guarantee no blank space (estimate ~200px per item)
+  const repeatCount = Math.max(3, Math.ceil((2400) / (items.length * 200)) + 1);
+  const displayed: TickerItem[] = [];
+  for (let r = 0; r < repeatCount; r++) {
+    displayed.push(...items);
+  }
 
   return (
     <div
+      ref={containerRef}
       className="w-full overflow-hidden border-b border-border bg-card/80 backdrop-blur-sm select-none cursor-grab active:cursor-grabbing"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
