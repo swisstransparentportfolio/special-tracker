@@ -95,9 +95,9 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nearest Expiry</p>
               <p className="font-display text-2xl font-bold text-foreground">
                 {(() => {
-                  const days = rows.map(r => getDaysUntil(r[expirationIdx] || "")).filter(d => d !== Infinity);
+                  const days = rows.map(r => getDaysUntil(r[expirationIdx] || "")).filter(d => d !== Infinity && d >= 0);
                   const min = Math.min(...days);
-                  return isFinite(min) ? `${Math.max(min, 0)}d` : "—";
+                  return isFinite(min) ? `${min}d` : "—";
                 })()}
               </p>
             </div>
