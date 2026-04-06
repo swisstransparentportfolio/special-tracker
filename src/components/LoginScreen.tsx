@@ -9,13 +9,12 @@ interface LoginScreenProps {
   onLogin: (sheetId: string) => void;
 }
 
-const CORRECT_PASSWORD = "suscriptores2026";
+const CORRECT_PASSWORD = "STP2026";
 const DEFAULT_SHEET_ID = "1i6k_807-JF8YIUEROyAl7edr7RFWwALy";
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [sheetId, setSheetId] = useState(DEFAULT_SHEET_ID);
   const [error, setError] = useState("");
 
   const extractSheetId = (input: string): string => {
@@ -31,12 +30,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       setError("Incorrect password");
       return;
     }
-    if (!sheetId.trim()) {
-      setError("Enter the Google Sheet ID or URL");
-      return;
-    }
     setError("");
-    onLogin(extractSheetId(sheetId));
+    onLogin(DEFAULT_SHEET_ID);
   };
 
   return (
@@ -82,21 +77,6 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             <Button type="submit" className="w-full gap-2">
               Sign In <ArrowRight className="h-4 w-4" />
             </Button>
-
-            <div className="border-t border-border pt-4">
-              <Label htmlFor="sheetId" className="text-muted-foreground">Google Sheet ID</Label>
-              <Input
-                id="sheetId"
-                type="text"
-                value={sheetId}
-                onChange={e => setSheetId(e.target.value)}
-                className="mt-2 bg-secondary border-border font-mono text-xs"
-                placeholder="URL or Google Sheet ID"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Shared as "Anyone with the link can view"
-              </p>
-            </div>
           </form>
         </div>
       </div>
