@@ -181,7 +181,7 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                       const isPositive = resultVal === "POSITIVE" || resultVal === "YES" || resultVal === "WIN" || resultVal === "1";
                       const isPending = resultVal === "IN PROCESS" || resultVal === "IN PROGRESS" || resultVal === "PENDING";
                       if (isPending) return (
-                        <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold bg-primary/15 text-primary">
+                        <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[hsl(210,80%,55%)]/15 text-[hsl(210,80%,45%)]">
                           IN PROCESS
                         </span>
                       );
