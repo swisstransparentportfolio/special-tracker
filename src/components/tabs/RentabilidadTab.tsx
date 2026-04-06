@@ -290,29 +290,23 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              {rentabilidadData.headers.map((h, i) => (
-                <th key={i} className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {h}
-                </th>
-              ))}
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Period</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Swiss Portfolio %</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">S&P 500 %</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nasdaq-100 %</th>
             </tr>
           </thead>
           <tbody>
-            {rentabilidadData.rows.filter(r => !r[0]?.startsWith("NOTE")).map((row, i) => (
+            {allData.map((row, i) => (
               <tr key={i} className="border-b border-border/50 transition-all hover:bg-secondary/50">
-                {row.map((cell, j) => {
-                  const num = parseVal(cell);
-                  const isNumeric = j > 0 && cell?.includes("%");
-                  return (
-                    <td key={j} className={`px-3 py-2.5 ${
-                      isNumeric
-                        ? num > 0 ? "text-success font-medium" : num < 0 ? "text-destructive font-medium" : "text-foreground"
-                        : "text-foreground"
-                    }`}>
-                      {cell}
-                    </td>
-                  );
-                })}
+                <td className="px-3 py-2.5 text-foreground">{row.name}</td>
+                {[row.portfolio, row.sp500, row.nasdaq].map((v, j) => (
+                  <td key={j} className={`px-3 py-2.5 font-medium ${
+                    v > 0 ? "text-success" : v < 0 ? "text-destructive" : "text-foreground"
+                  }`}>
+                    {formatPct(v)}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
