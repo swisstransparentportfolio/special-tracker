@@ -84,6 +84,8 @@ export default function EstudiadosTab({ data, loading }: Props) {
           <thead>
             <tr className="border-b-2 border-border">
               <SortableHeader label="Company" colIdx={nameIdx} sort={sort} onToggle={toggleSort} className="text-left" />
+              {ccyIdx !== -1 && <SortableHeader label="CCY" colIdx={ccyIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
+              {priceIdx !== -1 && <SortableHeader label="Price" colIdx={priceIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
               {sectorIdx !== -1 && <SortableHeader label="Sector" colIdx={sectorIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
               {mcapIdx !== -1 && <SortableHeader label="Mkt Cap" colIdx={mcapIdx} sort={sort} onToggle={toggleSort} className="hidden text-right lg:table-cell" />}
               {peIdx !== -1 && <SortableHeader label="P/E" colIdx={peIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
