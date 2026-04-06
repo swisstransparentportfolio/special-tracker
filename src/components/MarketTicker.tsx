@@ -176,10 +176,16 @@ export default function MarketTicker() {
 
   if (items.length === 0) return null;
 
-  const displayed = [...items, ...items];
+  // Repeat items enough times to guarantee no blank space (estimate ~200px per item)
+  const repeatCount = Math.max(3, Math.ceil((2400) / (items.length * 200)) + 1);
+  const displayed: TickerItem[] = [];
+  for (let r = 0; r < repeatCount; r++) {
+    displayed.push(...items);
+  }
 
   return (
     <div
+      ref={containerRef}
       className="w-full overflow-hidden border-b border-border bg-card/80 backdrop-blur-sm select-none cursor-grab active:cursor-grabbing"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
