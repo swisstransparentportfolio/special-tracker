@@ -1,5 +1,6 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ExternalLink, Calendar, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 
 interface Props {
@@ -53,8 +54,9 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
   const expirationIdx = getColIdx(headers, "expiration");
   const linkIdx = getColIdx(headers, "link") !== -1 ? getColIdx(headers, "link") : getColIdx(headers, "filing link");
 
-  // Summary stats
-  const activeCount = rows.length;
+  // Summary stats — active = expiration in the future
+  const activeRows = rows.filter(r => getDaysUntil(r[expirationIdx] || "") >= 0);
+  const activeCount = activeRows.length;
   const avgProfit = rows.reduce((sum, r) => sum + parseNum(r[profitIdx]), 0) / (rows.length || 1);
 
   return (
@@ -162,10 +164,12 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                   </td>
                   <td className="px-3 py-3.5 text-center">
                     {link ? (
-                      <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Link
-                      </a>
+                      <Button variant="outline" size="sm" asChild className="gap-1.5 text-xs font-medium text-primary border-primary/30 hover:bg-primary/10">
+                        <a href={link} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Filing
+                        </a>
+                      </Button>
                     ) : "—"}
                   </td>
                 </tr>
