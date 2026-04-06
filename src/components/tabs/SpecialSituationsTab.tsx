@@ -136,7 +136,7 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                     <td className="px-2 sm:px-3 py-3.5 text-center">
                       {(() => {
                         const t = (row[typeIdx] || "—").trim();
-                        const short = t.toLowerCase() === "tender offer" ? "Tender" : t.toLowerCase() === "liquidation" ? "Liquid." : t;
+                        const short = t.toLowerCase() === "tender offer" ? "Tender" : t;
                         return (
                           <>
                             <span className="sm:hidden rounded-full border border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground whitespace-nowrap">{short}</span>
