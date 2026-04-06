@@ -95,9 +95,9 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nearest Expiry</p>
               <p className="font-display text-2xl font-bold text-foreground">
                 {(() => {
-                  const days = rows.map(r => getDaysUntil(r[expirationIdx] || "")).filter(d => d !== Infinity);
+                  const days = rows.map(r => getDaysUntil(r[expirationIdx] || "")).filter(d => d !== Infinity && d >= 0);
                   const min = Math.min(...days);
-                  return isFinite(min) ? `${Math.max(min, 0)}d` : "—";
+                  return isFinite(min) ? `${min}d` : "—";
                 })()}
               </p>
             </div>
@@ -177,7 +177,11 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                   <td className="px-3 py-3.5 text-center">
                     {(() => {
                       const resultVal = resultIdx !== -1 ? (row[resultIdx] || "").trim().toUpperCase() : "";
-                      if (!resultVal) return "—";
+                      if (!resultVal) return (
+                        <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold bg-primary/15 text-primary">
+                          IN PROCESS
+                        </span>
+                      );
                       const isPositive = resultVal === "POSITIVE" || resultVal === "YES" || resultVal === "WIN" || resultVal === "1";
                       return (
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
