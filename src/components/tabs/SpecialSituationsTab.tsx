@@ -53,6 +53,7 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
   const profitIdx = getColIdx(headers, "profit");
   const expirationIdx = getColIdx(headers, "expiration");
   const linkIdx = getColIdx(headers, "link") !== -1 ? getColIdx(headers, "link") : getColIdx(headers, "filing link");
+  const resultIdx = getColIdx(headers, "result");
 
   // Summary stats — active = expiration in the future
   const activeRows = rows.filter(r => getDaysUntil(r[expirationIdx] || "") >= 0);
@@ -174,13 +175,18 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                     ) : "—"}
                   </td>
                   <td className="px-3 py-3.5 text-center">
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      profit > 0
-                        ? "bg-success/15 text-success"
-                        : "bg-destructive/15 text-destructive"
-                    }`}>
-                      {profit > 0 ? "POSITIVE" : "NEGATIVE"}
-                    </span>
+                    {(() => {
+                      const resultVal = resultIdx !== -1 ? (row[resultIdx] || "").trim().toUpperCase() : "";
+                      if (!resultVal) return "—";
+                      const isPositive = resultVal === "POSITIVE" || resultVal === "YES" || resultVal === "WIN" || resultVal === "1";
+                      return (
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          isPositive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
+                        }`}>
+                          {isPositive ? "POSITIVE" : "NEGATIVE"}
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               );
