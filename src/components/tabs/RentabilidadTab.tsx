@@ -44,7 +44,7 @@ interface ParsedRow {
   year: number | null;
 }
 
-export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
+export default function RentabilidadTab({ rentabilidadData, loading, benchmarks }: Props) {
   const [activePeriod, setActivePeriod] = useState("Since Inception");
 
   const allData = useMemo<ParsedRow[]>(() => {
