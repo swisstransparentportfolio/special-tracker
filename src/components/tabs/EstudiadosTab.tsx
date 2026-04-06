@@ -47,9 +47,12 @@ export default function EstudiadosTab({ data, loading }: Props) {
   // Stats
   const verdictCounts: Record<string, number> = {};
   rows.forEach(r => {
-    const v = verdictIdx !== -1 ? r[verdictIdx]?.trim() : "";
+    const v = verdictIdx !== -1 ? r[verdictIdx]?.trim().toLowerCase() : "";
     if (v) verdictCounts[v] = (verdictCounts[v] || 0) + 1;
   });
+
+  const reasonablyCount = verdictCounts["reasonably priced"] || 0;
+  const attractivelyCount = verdictCounts["attractively priced"] || 0;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -59,12 +62,14 @@ export default function EstudiadosTab({ data, loading }: Props) {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tracked Securities</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">{rows.length}</p>
         </Card>
-        {Object.entries(verdictCounts).slice(0, 2).map(([verdict, count]) => (
-          <Card key={verdict} className="border-border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{verdict}</p>
-            <p className="mt-1 font-display text-2xl font-bold text-foreground">{count}</p>
-          </Card>
-        ))}
+        <Card className="border-border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reasonably Priced</p>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">{reasonablyCount}</p>
+        </Card>
+        <Card className="border-border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Attractively Priced</p>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">{attractivelyCount}</p>
+        </Card>
       </div>
 
       {/* Table */}
