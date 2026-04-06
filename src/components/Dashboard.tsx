@@ -104,13 +104,13 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
       />
 
       {/* Tabs */}
-      <div className="border-b border-border">
-        <div className="container flex gap-0">
+      <div className="border-b border-border overflow-x-auto overflow-y-hidden scrollbar-hide">
+        <div className="container flex gap-0 min-w-max">
           {TABS.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-5 py-3 text-sm font-medium transition-colors ${
+              className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab.key
                   ? "border-b-2 border-primary text-foreground"
                   : "text-muted-foreground hover:text-foreground"

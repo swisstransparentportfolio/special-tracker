@@ -57,13 +57,17 @@ const CORS_PROXIES = [
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
 ];
 
 async function fetchWithProxy(url: string): Promise<Response> {
   for (const makeProxy of CORS_PROXIES) {
     try {
-      const res = await fetch(makeProxy(url));
-      if (res.ok) return res;
+      const res = await fetch(makeProxy(url), { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text.includes("Too Many Requests") || text.includes("limit")) continue;
+      return new Response(text, { status: 200, headers: res.headers });
     } catch { /* try next */ }
   }
   throw new Error("All proxies failed");
