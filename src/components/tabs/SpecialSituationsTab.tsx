@@ -1,5 +1,6 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ExternalLink, Calendar, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 
 interface Props {
