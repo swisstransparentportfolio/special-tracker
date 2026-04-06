@@ -1,6 +1,8 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { Clock, CheckCircle, AlertCircle, Search } from "lucide-react";
+import { useSortableTable } from "@/hooks/use-sortable-table";
+import SortableHeader from "@/components/SortableHeader";
 
 interface Props {
   data: SheetData | null;
@@ -30,6 +32,8 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
   }
 
   const { headers, rows } = data;
+  const { sortedRows, sort, toggleSort } = useSortableTable(rows);
+
   const nameIdx = getColIdx(headers, "company") !== -1 ? getColIdx(headers, "company") : 0;
   const tickerIdx = getColIdx(headers, "ticker");
   const sectorIdx = getColIdx(headers, "sector");
@@ -46,7 +50,6 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
 
   return (
     <div className="animate-fade-in space-y-6">
-      {/* Summary */}
       <Card className="border-border bg-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -59,8 +62,7 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
               const Icon = cfg?.icon || Search;
               return (
                 <span key={status} className={`flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium ${cfg?.className || "text-muted-foreground"}`}>
-                  <Icon className="h-3 w-3" />
-                  {status}: {count}
+                  <Icon className="h-3 w-3" /> {status}: {count}
                 </span>
               );
             })}
@@ -68,21 +70,20 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
         </div>
       </Card>
 
-      {/* Table */}
       <Card className="overflow-x-auto border-border bg-card p-4">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b-2 border-border">
-              <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
-              {sectorIdx !== -1 && <th className="hidden px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Sector</th>}
-              {typeIdx !== -1 && <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>}
-              {statusIdx !== -1 && <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>}
-              {priorityIdx !== -1 && <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Priority</th>}
-              {notesIdx !== -1 && <th className="hidden px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Notes</th>}
+              <SortableHeader label="Company" colIdx={nameIdx} sort={sort} onToggle={toggleSort} className="text-left" />
+              {sectorIdx !== -1 && <SortableHeader label="Sector" colIdx={sectorIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
+              {typeIdx !== -1 && <SortableHeader label="Type" colIdx={typeIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
+              {statusIdx !== -1 && <SortableHeader label="Status" colIdx={statusIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
+              {priorityIdx !== -1 && <SortableHeader label="Priority" colIdx={priorityIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
+              {notesIdx !== -1 && <SortableHeader label="Notes" colIdx={notesIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => {
+            {sortedRows.map((row, i) => {
               const ticker = tickerIdx !== -1 ? row[tickerIdx] : "";
               const status = statusIdx !== -1 ? row[statusIdx]?.trim() : "";
               const priority = priorityIdx !== -1 ? row[priorityIdx]?.trim() : "";
@@ -99,31 +100,22 @@ export default function EnDesarrolloTab({ data, loading }: Props) {
                   {sectorIdx !== -1 && <td className="hidden px-3 py-3.5 text-muted-foreground md:table-cell">{row[sectorIdx]}</td>}
                   {typeIdx !== -1 && (
                     <td className="px-3 py-3.5 text-center">
-                      <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                        {row[typeIdx] || "—"}
-                      </span>
+                      <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">{row[typeIdx] || "—"}</span>
                     </td>
                   )}
                   {statusIdx !== -1 && (
                     <td className="px-3 py-3.5 text-center">
                       <span className={`inline-flex items-center gap-1 text-xs font-medium ${statusCfg?.className || "text-muted-foreground"}`}>
-                        <StatusIcon className="h-3.5 w-3.5" />
-                        {status || "—"}
+                        <StatusIcon className="h-3.5 w-3.5" /> {status || "—"}
                       </span>
                     </td>
                   )}
                   {priorityIdx !== -1 && (
                     <td className="px-3 py-3.5 text-center">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityClass}`}>
-                        {priority || "—"}
-                      </span>
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityClass}`}>{priority || "—"}</span>
                     </td>
                   )}
-                  {notesIdx !== -1 && (
-                    <td className="hidden px-3 py-3.5 text-muted-foreground md:table-cell max-w-xs truncate">
-                      {row[notesIdx] || "—"}
-                    </td>
-                  )}
+                  {notesIdx !== -1 && <td className="hidden px-3 py-3.5 text-muted-foreground md:table-cell max-w-xs truncate">{row[notesIdx] || "—"}</td>}
                 </tr>
               );
             })}

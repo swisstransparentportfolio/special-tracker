@@ -2,6 +2,8 @@ import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { FileText, BarChart3 } from "lucide-react";
+import { useSortableTable } from "@/hooks/use-sortable-table";
+import SortableHeader from "@/components/SortableHeader";
 
 interface Props {
   portfolioData: SheetData | null;
@@ -42,13 +44,11 @@ function findCol(headers: string[], ...names: string[]): number {
 
 export default function PortfolioTab({ portfolioData, loading }: Props) {
   if (loading) return <LoadingSkeleton />;
-  if (!portfolioData || portfolioData.rows.length === 0) {
-    return <EmptyState />;
-  }
+  if (!portfolioData || portfolioData.rows.length === 0) return <EmptyState />;
 
   const { headers, rows } = portfolioData;
+  const { sortedRows, sort, toggleSort } = useSortableTable(rows);
 
-  // Column indices - try English first, then Spanish fallbacks
   const nameIdx = findCol(headers, "company", "empresa") !== -1 ? findCol(headers, "company", "empresa") : 0;
   const tickerIdx = findCol(headers, "ticker");
   const weightIdx = findCol(headers, "weight", "peso");
@@ -63,13 +63,11 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
   const modelIdx = findCol(headers, "model", "modelo");
   const ageIdx = findCol(headers, "age", "antigüedad", "antiguedad");
 
-  // Parse helpers
   const parseNum = (s: string | undefined) => {
     if (!s) return NaN;
     return parseFloat(s.replace(",", ".").replace("%", "").replace(/[$€£]/g, "").replace(/,/g, ""));
   };
 
-  // Filter active positions (exclude liquidity)
   const activeRows = rows.filter(r => {
     const name = r[nameIdx]?.toLowerCase() || "";
     const w = weightIdx !== -1 ? parseNum(r[weightIdx]) : 0;
@@ -80,36 +78,27 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
   const liquidityRow = rows.find(r => r[nameIdx]?.toLowerCase().includes("liquid"));
   const liquidityPct = liquidityRow && weightIdx !== -1 ? (liquidityRow[weightIdx]?.trim() || "—") : "—";
 
-  // Weighted CAGR
   let weightedCagr = 0;
   let totalWeightWithCagr = 0;
   activeRows.forEach(row => {
     const w = weightIdx !== -1 ? parseNum(row[weightIdx]) : 0;
     const c = cagrIdx !== -1 ? parseNum(row[cagrIdx]) : NaN;
-    if (!isNaN(w) && !isNaN(c)) {
-      weightedCagr += w * c;
-      totalWeightWithCagr += w;
-    }
+    if (!isNaN(w) && !isNaN(c)) { weightedCagr += w * c; totalWeightWithCagr += w; }
   });
   const avgCagr = totalWeightWithCagr > 0 ? weightedCagr / totalWeightWithCagr : 0;
   const pctWithTarget = totalWeightWithCagr > 0
     ? `${((totalWeightWithCagr / activeRows.reduce((s, r) => s + (parseNum(r[weightIdx]) || 0), 0)) * 100).toFixed(1)}% of portfolio with P.O.`
     : "";
 
-  // Weighted Risk
   let weightedRisk = 0;
   let totalWeightWithRisk = 0;
   activeRows.forEach(row => {
     const w = weightIdx !== -1 ? parseNum(row[weightIdx]) : 0;
     const risk = riskIdx !== -1 ? parseInt(row[riskIdx]) : NaN;
-    if (!isNaN(w) && !isNaN(risk)) {
-      weightedRisk += w * risk;
-      totalWeightWithRisk += w;
-    }
+    if (!isNaN(w) && !isNaN(risk)) { weightedRisk += w * risk; totalWeightWithRisk += w; }
   });
   const avgRisk = totalWeightWithRisk > 0 ? weightedRisk / totalWeightWithRisk : 0;
 
-  // Pie data
   const pieData = activeRows
     .map(r => ({
       name: (tickerIdx !== -1 ? r[tickerIdx] : r[nameIdx]?.split(" ")[0]) || "—",
@@ -122,7 +111,6 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border bg-card p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weighted Expected CAGR</p>
@@ -143,73 +131,44 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
         </Card>
       </div>
 
-      {/* Donut chart */}
       {pieData.length > 0 && (
         <Card className="border-border bg-card p-5">
-          <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Portfolio Composition
-          </h3>
+          <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
           <p className="mb-4 text-xs text-muted-foreground">Click a segment to see details</p>
           <ResponsiveContainer width="100%" height={420}>
             <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={80}
-                outerRadius={180}
-                dataKey="value"
-                paddingAngle={1}
-                stroke="none"
-                label={renderCustomLabel}
-                labelLine={false}
-              >
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} className="cursor-pointer transition-opacity hover:opacity-80" />
-                ))}
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={80} outerRadius={180} dataKey="value" paddingAngle={1} stroke="none" label={renderCustomLabel} labelLine={false}>
+                {pieData.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} className="cursor-pointer transition-opacity hover:opacity-80" />))}
               </Pie>
-              <Tooltip
-                formatter={(v: number, _name: string, props: any) => [`${v.toFixed(1)}%`, props.payload.fullName]}
-                contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: 12,
-                }}
-              />
+              <Tooltip formatter={(v: number, _name: string, props: any) => [`${v.toFixed(1)}%`, props.payload.fullName]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
       )}
 
-      {/* Positions table */}
       <Card className="overflow-x-auto border-border bg-card p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Positions — Portfolio
-          </h3>
-          <span className="text-xs text-muted-foreground">
-            {totalPositions} securities · Liquidity {liquidityPct}
-          </span>
+          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Positions — Portfolio</h3>
+          <span className="text-xs text-muted-foreground">{totalPositions} securities · Liquidity {liquidityPct}</span>
         </div>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
-              {geoIdx !== -1 && <th className="hidden px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Geography</th>}
-              {currencyIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ccy</th>}
-              {priceIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Price</th>}
-              {targetIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">P.O. 3Y</th>}
-              {cagrIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">CAGR 3Y</th>}
-              {weightIdx !== -1 && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weight</th>}
+              <SortableHeader label="Company" colIdx={nameIdx} sort={sort} onToggle={toggleSort} className="text-left" />
+              {geoIdx !== -1 && <SortableHeader label="Geography" colIdx={geoIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
+              {currencyIdx !== -1 && <SortableHeader label="Ccy" colIdx={currencyIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
+              {priceIdx !== -1 && <SortableHeader label="Price" colIdx={priceIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
+              {targetIdx !== -1 && <SortableHeader label="P.O. 3Y" colIdx={targetIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
+              {cagrIdx !== -1 && <SortableHeader label="CAGR 3Y" colIdx={cagrIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
+              {weightIdx !== -1 && <SortableHeader label="Weight" colIdx={weightIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
               {detailIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detail</th>}
-              {ageIdx !== -1 && <th className="hidden px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Age</th>}
-              {riskIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risk</th>}
+              {ageIdx !== -1 && <SortableHeader label="Age" colIdx={ageIdx} sort={sort} onToggle={toggleSort} className="hidden text-center md:table-cell" />}
+              {riskIdx !== -1 && <SortableHeader label="Risk" colIdx={riskIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {hasLinks && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Links</th>}
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => {
+            {sortedRows.map((row, i) => {
               const cagr = cagrIdx !== -1 ? row[cagrIdx] : "";
               const cagrNum = parseNum(cagr);
               const isPositive = !isNaN(cagrNum) && cagrNum > 0;
@@ -228,9 +187,7 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
                   {priceIdx !== -1 && <td className="px-3 py-3 text-right text-foreground">{row[priceIdx]}</td>}
                   {targetIdx !== -1 && <td className="px-3 py-3 text-right font-medium text-foreground">{row[targetIdx] || "—"}</td>}
                   {cagrIdx !== -1 && (
-                    <td className={`px-3 py-3 text-right font-medium ${
-                      isPositive ? "text-success" : cagr ? "text-destructive" : "text-muted-foreground"
-                    }`}>
+                    <td className={`px-3 py-3 text-right font-medium ${isPositive ? "text-success" : cagr ? "text-destructive" : "text-muted-foreground"}`}>
                       {cagr || "—"}
                     </td>
                   )}
@@ -245,11 +202,7 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
                     </td>
                   )}
                   {ageIdx !== -1 && <td className="hidden px-3 py-3 text-center text-muted-foreground md:table-cell">{row[ageIdx] || "—"}</td>}
-                  {riskIdx !== -1 && (
-                    <td className="px-3 py-3 text-center">
-                      <RiskBadge value={row[riskIdx]} />
-                    </td>
-                  )}
+                  {riskIdx !== -1 && <td className="px-3 py-3 text-center"><RiskBadge value={row[riskIdx]} /></td>}
                   {hasLinks && (
                     <td className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
@@ -280,19 +233,13 @@ function RiskBadge({ value }: { value: string }) {
   const num = parseInt(value);
   if (isNaN(num)) return <span className="text-muted-foreground">—</span>;
   const color = num <= 4 ? "bg-success/20 text-success" : num <= 7 ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive";
-  return (
-    <span className={`inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold ${color}`}>
-      {num}
-    </span>
-  );
+  return <span className={`inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold ${color}`}>{num}</span>;
 }
 
 function LoadingSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
-        {[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse rounded-lg bg-card" />)}
-      </div>
+      <div className="grid grid-cols-3 gap-4">{[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse rounded-lg bg-card" />)}</div>
       <div className="h-96 animate-pulse rounded-lg bg-card" />
     </div>
   );
