@@ -173,6 +173,15 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                       </Button>
                     ) : "—"}
                   </td>
+                  <td className="px-3 py-3.5 text-center">
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      profit > 0
+                        ? "bg-success/15 text-success"
+                        : "bg-destructive/15 text-destructive"
+                    }`}>
+                      {profit > 0 ? "POSITIVE" : "NEGATIVE"}
+                    </span>
+                  </td>
                 </tr>
               );
             })}
