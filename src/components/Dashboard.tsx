@@ -129,6 +129,9 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
         {activeTab === "portfolio" && (
           <PortfolioTab portfolioData={data.portfolio} loading={loading} />
         )}
+        {activeTab === "special" && (
+          <SpecialSituationsTab data={data.special} loading={loading} />
+        )}
         {activeTab === "estudiados" && (
           <EstudiadosTab data={data.estudiados} loading={loading} />
         )}
