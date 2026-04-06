@@ -13,7 +13,7 @@ async function fetchYtdReturn(symbol: string): Promise<{ ytd: number | null; cur
     const now = Math.floor(Date.now() / 1000);
     const yearStart = Math.floor(new Date(new Date().getFullYear(), 0, 1).getTime() / 1000);
     const rawUrl = `${YAHOO_BASE}/${symbol}?period1=${yearStart}&period2=${now}&interval=1d`;
-    const url = `${CORS_PROXY}${encodeURIComponent(rawUrl)}`;
+    const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
     
     const res = await fetch(url);
     if (!res.ok) return { ytd: null, current: null };
