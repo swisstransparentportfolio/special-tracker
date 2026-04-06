@@ -249,7 +249,7 @@ function PieChartCard({ pieData }: { pieData: { name: string; fullName: string; 
   );
 }
 
-
+function LoadingSkeleton() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-4">{[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse rounded-lg bg-card" />)}</div>
