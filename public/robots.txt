@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://swisstransparentportfolio.github.io/special-tracker/sitemap.xml
