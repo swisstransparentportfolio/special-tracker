@@ -66,31 +66,31 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2.5"><AlertTriangle className="h-5 w-5 text-primary" /></div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Active Situations</p>
-              <p className="font-display text-2xl font-bold text-foreground">{activeCount}</p>
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="border-border bg-card p-3 sm:p-5">
+          <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-3">
+            <div className="rounded-lg bg-primary/10 p-2"><AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /></div>
+            <div className="text-center sm:text-left">
+              <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Active</p>
+              <p className="font-display text-lg sm:text-2xl font-bold text-foreground">{activeCount}</p>
             </div>
           </div>
         </Card>
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-success/10 p-2.5"><DollarSign className="h-5 w-5 text-success" /></div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Avg Max Profit</p>
-              <p className="font-display text-2xl font-bold text-foreground">{formatCurrency(avgProfit)}</p>
+        <Card className="border-border bg-card p-3 sm:p-5">
+          <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-3">
+            <div className="rounded-lg bg-success/10 p-2"><DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-success" /></div>
+            <div className="text-center sm:text-left">
+              <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Avg Profit</p>
+              <p className="font-display text-lg sm:text-2xl font-bold text-foreground">{formatCurrency(avgProfit)}</p>
             </div>
           </div>
         </Card>
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-accent/30 p-2.5"><TrendingUp className="h-5 w-5 text-accent-foreground" /></div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nearest Expiry</p>
-              <p className="font-display text-2xl font-bold text-foreground">
+        <Card className="border-border bg-card p-3 sm:p-5">
+          <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-3">
+            <div className="rounded-lg bg-accent/30 p-2"><TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-accent-foreground" /></div>
+            <div className="text-center sm:text-left">
+              <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground">Nearest</p>
+              <p className="font-display text-lg sm:text-2xl font-bold text-foreground">
                 {(() => {
                   const days = rows.map(r => getDaysUntil(r[expirationIdx] || "")).filter(d => d !== Infinity && d >= 0);
                   const min = Math.min(...days);
