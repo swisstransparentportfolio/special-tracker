@@ -136,7 +136,13 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
         </Card>
       </div>
 
-      {pieData.length > 0 && <PieChartCard pieData={pieData} />}
+      {pieData.length > 0 && (
+        <Card className="border-border bg-card p-4 sm:p-5">
+          <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
+          <p className="mb-3 text-xs text-muted-foreground">Click a segment to see details</p>
+          <PieChartInner pieData={pieData} />
+        </Card>
+      )}
 
       <Card className="overflow-x-auto border-border bg-card p-4">
         <div className="mb-3 flex items-center justify-between">
@@ -227,25 +233,21 @@ function RiskBadge({ value }: { value: string }) {
   const color = num <= 4 ? "bg-success/20 text-success" : num <= 7 ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive";
   return <span className={`inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold ${color}`}>{num}</span>;
 }
-function PieChartCard({ pieData }: { pieData: { name: string; fullName: string; value: number }[] }) {
+function PieChartInner({ pieData }: { pieData: { name: string; fullName: string; value: number }[] }) {
   const isMobile = useIsMobile();
   const chartHeight = isMobile ? 300 : 420;
   const innerR = isMobile ? 55 : 80;
   const outerR = isMobile ? 130 : 180;
 
   return (
-    <Card className="border-border bg-card p-4 sm:p-5">
-      <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
-      <p className="mb-3 text-xs text-muted-foreground">Click a segment to see details</p>
-      <ResponsiveContainer width="100%" height={chartHeight}>
-        <PieChart>
-          <Pie data={pieData} cx="50%" cy="50%" innerRadius={innerR} outerRadius={outerR} dataKey="value" paddingAngle={1} stroke="none" label={renderCustomLabel(isMobile)} labelLine={false}>
-            {pieData.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} className="cursor-pointer transition-opacity hover:opacity-80" />))}
-          </Pie>
-          <Tooltip formatter={(v: number, _name: string, props: any) => [`${v.toFixed(1)}%`, props.payload.fullName]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} />
-        </PieChart>
-      </ResponsiveContainer>
-    </Card>
+    <ResponsiveContainer width="100%" height={chartHeight}>
+      <PieChart>
+        <Pie data={pieData} cx="50%" cy="50%" innerRadius={innerR} outerRadius={outerR} dataKey="value" paddingAngle={1} stroke="none" label={renderCustomLabel(isMobile)} labelLine={false}>
+          {pieData.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} className="cursor-pointer transition-opacity hover:opacity-80" />))}
+        </Pie>
+        <Tooltip formatter={(v: number, _name: string, props: any) => [`${v.toFixed(1)}%`, props.payload.fullName]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} />
+      </PieChart>
+    </ResponsiveContainer>
   );
 }
 
