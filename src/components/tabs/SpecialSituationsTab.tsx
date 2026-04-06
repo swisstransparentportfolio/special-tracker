@@ -177,12 +177,14 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                   <td className="px-3 py-3.5 text-center">
                     {(() => {
                       const resultVal = resultIdx !== -1 ? (row[resultIdx] || "").trim().toUpperCase() : "";
-                      if (!resultVal) return (
+                      if (!resultVal) return "—";
+                      const isPositive = resultVal === "POSITIVE" || resultVal === "YES" || resultVal === "WIN" || resultVal === "1";
+                      const isPending = resultVal === "IN PROCESS" || resultVal === "IN PROGRESS" || resultVal === "PENDING";
+                      if (isPending) return (
                         <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold bg-primary/15 text-primary">
                           IN PROCESS
                         </span>
                       );
-                      const isPositive = resultVal === "POSITIVE" || resultVal === "YES" || resultVal === "WIN" || resultVal === "1";
                       return (
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                           isPositive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
