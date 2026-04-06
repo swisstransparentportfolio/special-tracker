@@ -36,6 +36,8 @@ export default function EstudiadosTab({ data, loading }: Props) {
 
   const nameIdx = getColIdx(headers, "company") !== -1 ? getColIdx(headers, "company") : getColIdx(headers, "empresa") !== -1 ? getColIdx(headers, "empresa") : 0;
   const tickerIdx = getColIdx(headers, "ticker");
+  const ccyIdx = getColIdx(headers, "ccy");
+  const priceIdx = getColIdx(headers, "price");
   const sectorIdx = getColIdx(headers, "sector");
   const mcapIdx = getColIdx(headers, "market cap");
   const peIdx = getColIdx(headers, "p/e");
