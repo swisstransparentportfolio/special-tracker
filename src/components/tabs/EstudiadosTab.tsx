@@ -11,7 +11,7 @@ interface Props {
 
 const VERDICT_COLORS: Record<string, string> = {
   "attractively priced": "bg-success/15 text-success border-success/30",
-  "reasonably priced": "bg-primary/15 text-primary border-primary/30",
+  "reasonably priced": "bg-warning/15 text-warning border-warning/30",
   "premium priced": "bg-destructive/15 text-destructive border-destructive/30",
 };
 
