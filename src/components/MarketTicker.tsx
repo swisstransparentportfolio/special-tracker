@@ -177,7 +177,29 @@ export default function MarketTicker() {
     isDragging.current = false;
   }, []);
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return (
+      <div className="w-full overflow-hidden border-b border-border bg-card/80 backdrop-blur-sm">
+        <div className="flex whitespace-nowrap py-2">
+          {SYMBOLS.map((s) => (
+            <div key={s.symbol} className="inline-flex items-center gap-3 px-4 border-r border-border last:border-r-0">
+              <div className="h-7 w-7 rounded-md bg-muted animate-pulse" />
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-foreground">{s.label}</span>
+                  <div className="h-3 w-10 rounded bg-muted animate-pulse" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-14 rounded bg-muted animate-pulse" />
+                  <div className="h-3 w-10 rounded bg-muted animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // Repeat items enough times to guarantee no blank space (estimate ~200px per item)
   const repeatCount = Math.max(3, Math.ceil((2400) / (items.length * 200)) + 1);
