@@ -134,15 +134,16 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                   </td>
                   {typeIdx !== -1 && (
                     <td className="px-2 sm:px-3 py-3.5 text-center">
-                      <span className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[10px] sm:text-xs font-medium text-muted-foreground whitespace-nowrap">{
-                        (() => {
-                          const t = (row[typeIdx] || "—").trim();
-                          if (t.toLowerCase() === "tender offer") return "Tender";
-                          if (t.toLowerCase() === "liquidation") return "Liquid.";
-                          return t;
-                        })()
-                      }</span>
-                      <span className="hidden sm:inline rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">{row[typeIdx] || "—"}</span>
+                      {(() => {
+                        const t = (row[typeIdx] || "—").trim();
+                        const short = t.toLowerCase() === "tender offer" ? "Tender" : t.toLowerCase() === "liquidation" ? "Liquid." : t;
+                        return (
+                          <>
+                            <span className="sm:hidden rounded-full border border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground whitespace-nowrap">{short}</span>
+                            <span className="hidden sm:inline rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">{t}</span>
+                          </>
+                        );
+                      })()}
                     </td>
                   )}
                   {filingDateIdx !== -1 && <td className="hidden px-3 py-3.5 text-center text-muted-foreground md:table-cell">{row[filingDateIdx] || "—"}</td>}
