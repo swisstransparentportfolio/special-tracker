@@ -96,7 +96,7 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                 {(() => {
                   const days = rows.map(r => getDaysUntil(r[expirationIdx] || "")).filter(d => d !== Infinity);
                   const min = Math.min(...days);
-                  return isFinite(min) ? `${min}d` : "—";
+                  return isFinite(min) ? `${Math.max(min, 0)}d` : "—";
                 })()}
               </p>
             </div>
