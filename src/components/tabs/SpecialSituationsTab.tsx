@@ -53,8 +53,9 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
   const expirationIdx = getColIdx(headers, "expiration");
   const linkIdx = getColIdx(headers, "link") !== -1 ? getColIdx(headers, "link") : getColIdx(headers, "filing link");
 
-  // Summary stats
-  const activeCount = rows.length;
+  // Summary stats — active = expiration in the future
+  const activeRows = rows.filter(r => getDaysUntil(r[expirationIdx] || "") >= 0);
+  const activeCount = activeRows.length;
   const avgProfit = rows.reduce((sum, r) => sum + parseNum(r[profitIdx]), 0) / (rows.length || 1);
 
   return (
