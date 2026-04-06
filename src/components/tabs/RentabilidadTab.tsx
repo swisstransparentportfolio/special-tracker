@@ -44,7 +44,7 @@ interface ParsedRow {
   year: number | null;
 }
 
-export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
+export default function RentabilidadTab({ rentabilidadData, loading, benchmarks }: Props) {
   const [activePeriod, setActivePeriod] = useState("Since Inception");
 
   const allData = useMemo<ParsedRow[]>(() => {
@@ -113,8 +113,17 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
       });
     }
 
+    // Fill missing YTD benchmark values from live data (GOOGLEFINANCE formulas export as empty)
+    if (benchmarks) {
+      const ytd = result.find(d => d.isYtd);
+      if (ytd) {
+        if (ytd.sp500 === 0 && benchmarks.sp500Ytd != null) ytd.sp500 = benchmarks.sp500Ytd;
+        if (ytd.nasdaq === 0 && benchmarks.nasdaqYtd != null) ytd.nasdaq = benchmarks.nasdaqYtd;
+      }
+    }
+
     return result;
-  }, [rentabilidadData]);
+  }, [rentabilidadData, benchmarks]);
 
   const ytdRow = allData.find(d => d.isYtd);
   const yearRows = useMemo(
