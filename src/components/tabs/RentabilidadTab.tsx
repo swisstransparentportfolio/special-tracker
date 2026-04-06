@@ -60,8 +60,9 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
     const h0 = headers[0]?.trim() || "";
     if (h0.toLowerCase().startsWith("period") && h0.includes(" ")) {
       const periodParts = h0.split(/\s+/);
+      // Only match tokens that have digits AND %, e.g. "+8.42%" but not standalone "%"
       const extractPcts = (s: string) =>
-        (s || "").split(/\s+/).filter(p => p.includes("%")).map(p => parseVal(p));
+        (s || "").split(/\s+/).filter(p => p.includes("%") && /\d/.test(p)).map(p => parseVal(p));
 
       const pcts1 = extractPcts(headers[1] || "");
       const pcts2 = extractPcts(headers[2] || "");
