@@ -35,6 +35,7 @@ const SHEET_NAMES: Record<TabKey, string[]> = {
 const HEADER_VALIDATORS: Record<TabKey, string[]> = {
   rentabilidad: ["period", "portfolio"],
   portfolio: ["ticker", "weight", "peso", "company", "empresa"],
+  special: ["name", "type", "tender", "expiration", "profit"],
   estudiados: ["ticker", "sector", "company", "empresa"],
   desarrollo: ["status", "priority", "type", "tipo"],
 };
