@@ -139,20 +139,7 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
         </Card>
       </div>
 
-      {pieData.length > 0 && (
-        <Card className="border-border bg-card p-5">
-          <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
-          <p className="mb-4 text-xs text-muted-foreground">Click a segment to see details</p>
-          <ResponsiveContainer width="100%" height={420}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={80} outerRadius={180} dataKey="value" paddingAngle={1} stroke="none" label={renderCustomLabel} labelLine={false}>
-                {pieData.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} className="cursor-pointer transition-opacity hover:opacity-80" />))}
-              </Pie>
-              <Tooltip formatter={(v: number, _name: string, props: any) => [`${v.toFixed(1)}%`, props.payload.fullName]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
-      )}
+      {pieData.length > 0 && <PieChartCard pieData={pieData} />}
 
       <Card className="overflow-x-auto border-border bg-card p-4">
         <div className="mb-3 flex items-center justify-between">
