@@ -48,76 +48,70 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
   const [activePeriod, setActivePeriod] = useState("Since Inception");
 
   const allData = useMemo<ParsedRow[]>(() => {
-    if (!rentabilidadData || rentabilidadData.rows.length === 0) return [];
+    if (!rentabilidadData) return [];
     const result: ParsedRow[] = [];
+    const { headers, rows } = rentabilidadData;
 
-    for (const r of rentabilidadData.rows) {
-      if (!r[0] || r[0].startsWith("NOTE")) continue;
-      const col0 = r[0].trim();
-      const col1 = r[1]?.trim() || "";
-      const col2 = r[2]?.trim() || "";
-      const col3 = r[3]?.trim() || "";
+    // The CSV parser puts the first line into headers.
+    // Due to merged cells, headers[0] may contain all periods concatenated:
+    // "Period YTD 2026 2025 2024 2023"
+    // and headers[1..3] contain all values:
+    // "Swiss Portfolio % +8.42% +32.60% +28.14% +41.20%"
+    const h0 = headers[0]?.trim() || "";
+    if (h0.toLowerCase().startsWith("period") && h0.includes(" ")) {
+      const periodParts = h0.split(/\s+/);
+      const extractPcts = (s: string) =>
+        (s || "").split(/\s+/).filter(p => p.includes("%")).map(p => parseVal(p));
 
-      // Check if this is a merged row with multiple periods concatenated
-      // e.g. "Period YTD 2026 2025 2024 2023" | "Portfolio % +8.42% +32.60% +28.14% +41.20%"
-      const periodParts = col0.split(/\s+/);
-      const valueParts1 = col1.split(/\s+/);
-      const valueParts2 = col2.split(/\s+/);
-      const valueParts3 = col3.split(/\s+/);
+      const pcts1 = extractPcts(headers[1] || "");
+      const pcts2 = extractPcts(headers[2] || "");
+      const pcts3 = extractPcts(headers[3] || "");
 
-      // Detect merged row: first token is "Period" or header-like, and contains multiple year/YTD entries
-      if (periodParts[0].toLowerCase() === "period" && periodParts.length > 2) {
-        // Skip "Period" label, then parse pairs like "YTD" "2026", "2025", "2024", etc.
-        // Values skip their header label (e.g. "Portfolio" "%")
-        const periods: string[] = [];
-        let i = 1;
-        while (i < periodParts.length) {
-          if (periodParts[i].toLowerCase() === "ytd" && i + 1 < periodParts.length) {
-            periods.push(`YTD ${periodParts[i + 1]}`);
-            i += 2;
-          } else if (/^\d{4}$/.test(periodParts[i])) {
-            periods.push(periodParts[i]);
-            i++;
-          } else {
-            i++;
-          }
+      const periods: string[] = [];
+      let i = 1;
+      while (i < periodParts.length) {
+        if (periodParts[i].toLowerCase() === "ytd" && i + 1 < periodParts.length) {
+          periods.push(`YTD ${periodParts[i + 1]}`);
+          i += 2;
+        } else if (/^\d{4}$/.test(periodParts[i])) {
+          periods.push(periodParts[i]);
+          i++;
+        } else {
+          i++;
         }
+      }
 
-        // Extract percentage values from each column (skip header words)
-        const extractPcts = (parts: string[]) =>
-          parts.filter(p => p.includes("%")).map(p => parseVal(p));
-
-        const pcts1 = extractPcts(valueParts1);
-        const pcts2 = extractPcts(valueParts2);
-        const pcts3 = extractPcts(valueParts3);
-
-        for (let j = 0; j < periods.length; j++) {
-          const name = periods[j];
-          const isYtd = name.toLowerCase().startsWith("ytd");
-          const yearMatch = name.match(/\d{4}/);
-          result.push({
-            name,
-            portfolio: pcts1[j] ?? 0,
-            sp500: pcts2[j] ?? 0,
-            nasdaq: pcts3[j] ?? 0,
-            isYtd,
-            year: yearMatch ? parseInt(yearMatch[0]) : null,
-          });
-        }
-      } else {
-        // Normal single row
-        const isYtd = col0.toLowerCase().startsWith("ytd");
-        const yearMatch = col0.match(/\d{4}/);
+      for (let j = 0; j < periods.length; j++) {
+        const name = periods[j];
+        const isYtd = name.toLowerCase().startsWith("ytd");
+        const yearMatch = name.match(/\d{4}/);
         result.push({
-          name: col0,
-          portfolio: parseVal(col1),
-          sp500: parseVal(col2),
-          nasdaq: parseVal(col3),
+          name,
+          portfolio: pcts1[j] ?? 0,
+          sp500: pcts2[j] ?? 0,
+          nasdaq: pcts3[j] ?? 0,
           isYtd,
           year: yearMatch ? parseInt(yearMatch[0]) : null,
         });
       }
     }
+
+    // Also parse normal rows (e.g. "2022", "+33.78%", ...)
+    for (const r of rows) {
+      if (!r[0] || r[0].startsWith("NOTE")) continue;
+      const col0 = r[0].trim();
+      const isYtd = col0.toLowerCase().startsWith("ytd");
+      const yearMatch = col0.match(/\d{4}/);
+      result.push({
+        name: col0,
+        portfolio: parseVal(r[1]),
+        sp500: parseVal(r[2]),
+        nasdaq: parseVal(r[3]),
+        isYtd,
+        year: yearMatch ? parseInt(yearMatch[0]) : null,
+      });
+    }
+
     return result;
   }, [rentabilidadData]);
 
