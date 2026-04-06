@@ -59,34 +59,33 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
     const now = new Date();
     setLastUpdate(now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
 
-    const [sheetResults, benchmarkData] = await Promise.all([
-      Promise.all(
-        (Object.keys(SHEET_NAMES) as TabKey[]).map(async (tab) => {
-          for (const name of SHEET_NAMES[tab]) {
-            try {
-              const sheet = await fetchSheet(sheetId, name);
-              if (sheet.rows.length === 0) continue;
-              // Validate headers match expected tab
-              const validators = HEADER_VALIDATORS[tab];
-              const headersLower = sheet.headers.map(h => h.toLowerCase());
-              const matches = validators.some(v => headersLower.some(h => h.includes(v)));
-              if (matches) {
-                // Filter out NOTE/comment rows
-                sheet.rows = sheet.rows.filter(r => !r[0]?.startsWith("NOTE"));
-                return { tab, sheet };
-              }
-            } catch { /* Try next */ }
-          }
-          return { tab, sheet: null };
-        })
-      ),
-      fetchBenchmarks(),
-    ]);
+    // Load sheet data first (fast), then benchmarks in background
+    const sheetResults = await Promise.all(
+      (Object.keys(SHEET_NAMES) as TabKey[]).map(async (tab) => {
+        for (const name of SHEET_NAMES[tab]) {
+          try {
+            const sheet = await fetchSheet(sheetId, name);
+            if (sheet.rows.length === 0) continue;
+            const validators = HEADER_VALIDATORS[tab];
+            const headersLower = sheet.headers.map(h => h.toLowerCase());
+            const matches = validators.some(v => headersLower.some(h => h.includes(v)));
+            if (matches) {
+              sheet.rows = sheet.rows.filter(r => !r[0]?.startsWith("NOTE"));
+              return { tab, sheet };
+            }
+          } catch { /* Try next */ }
+        }
+        return { tab, sheet: null };
+      })
+    );
 
     const results: Record<string, SheetData | null> = {};
     sheetResults.forEach(({ tab, sheet }) => { results[tab] = sheet; });
-    setBenchmarks(benchmarkData);
     setData(results as Record<TabKey, SheetData | null>);
+    setLoading(false);
+
+    // Fetch benchmarks in background (doesn't block UI)
+    fetchBenchmarks().then(b => setBenchmarks(b)).catch(() => {});
     setLoading(false);
   }, [sheetId]);
 

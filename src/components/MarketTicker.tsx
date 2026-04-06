@@ -118,7 +118,7 @@ export default function MarketTicker() {
       if (!cancelled) setItems(results);
     }
     load();
-    const interval = setInterval(load, 60_000);
+    const interval = setInterval(load, 15 * 60_000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
