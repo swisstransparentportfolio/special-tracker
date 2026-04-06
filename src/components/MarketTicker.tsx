@@ -52,9 +52,25 @@ function formatPrice(price: number, symbol: string): string {
   return price.toFixed(2);
 }
 
+// List of CORS proxies to try in order
+const CORS_PROXIES = [
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
+async function fetchWithProxy(url: string): Promise<Response> {
+  for (const makeProxy of CORS_PROXIES) {
+    try {
+      const res = await fetch(makeProxy(url));
+      if (res.ok) return res;
+    } catch { /* try next */ }
+  }
+  throw new Error("All proxies failed");
+}
+
 // Fetch quotes using v8/chart endpoint (v7 is blocked)
 async function fetchAllQuotes(): Promise<TickerItem[]> {
-  // Fetch in parallel batches of 6 to avoid overwhelming the proxy
   const BATCH_SIZE = 6;
   const allResults: TickerItem[] = [];
 
@@ -64,8 +80,7 @@ async function fetchAllQuotes(): Promise<TickerItem[]> {
       batch.map(async (s) => {
         try {
           const rawUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.symbol)}?interval=1d&range=2d`;
-          const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`);
-          if (!res.ok) return null;
+          const res = await fetchWithProxy(rawUrl);
           const data = await res.json();
           const meta = data?.chart?.result?.[0]?.meta;
           if (!meta) return null;
