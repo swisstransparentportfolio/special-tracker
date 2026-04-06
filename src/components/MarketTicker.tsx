@@ -47,7 +47,8 @@ const CORS_PROXY = "https://corsproxy.io/?url=";
 
 async function fetchTickerData(symbol: string): Promise<Omit<TickerItem, "label">> {
   try {
-    const res = await fetch(`${YAHOO_BASE}/${symbol}?interval=1d&range=2d`);
+    const url = `${CORS_PROXY}${encodeURIComponent(`${YAHOO_BASE}/${symbol}?interval=1d&range=2d`)}`;
+    const res = await fetch(url);
     if (!res.ok) return { symbol, price: null, change: null, changePercent: null };
     const data = await res.json();
     const meta = data?.chart?.result?.[0]?.meta;
