@@ -118,6 +118,7 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
               <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Max Profit</th>
               <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiration</th>
               <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Filing</th>
+              <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Result</th>
             </tr>
           </thead>
           <tbody>
