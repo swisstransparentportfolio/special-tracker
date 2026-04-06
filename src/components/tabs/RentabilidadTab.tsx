@@ -49,21 +49,76 @@ export default function RentabilidadTab({ rentabilidadData, loading }: Props) {
 
   const allData = useMemo<ParsedRow[]>(() => {
     if (!rentabilidadData || rentabilidadData.rows.length === 0) return [];
-    return rentabilidadData.rows
-      .filter(r => r[0] && !r[0].startsWith("NOTE"))
-      .map(r => {
-        const name = r[0]?.trim() || "";
-        const isYtd = name.toLowerCase().startsWith("ytd");
-        const yearMatch = name.match(/\d{4}/);
-        return {
-          name,
-          portfolio: parseVal(r[1]),
-          sp500: parseVal(r[2]),
-          nasdaq: parseVal(r[3]),
+    const result: ParsedRow[] = [];
+
+    for (const r of rentabilidadData.rows) {
+      if (!r[0] || r[0].startsWith("NOTE")) continue;
+      const col0 = r[0].trim();
+      const col1 = r[1]?.trim() || "";
+      const col2 = r[2]?.trim() || "";
+      const col3 = r[3]?.trim() || "";
+
+      // Check if this is a merged row with multiple periods concatenated
+      // e.g. "Period YTD 2026 2025 2024 2023" | "Portfolio % +8.42% +32.60% +28.14% +41.20%"
+      const periodParts = col0.split(/\s+/);
+      const valueParts1 = col1.split(/\s+/);
+      const valueParts2 = col2.split(/\s+/);
+      const valueParts3 = col3.split(/\s+/);
+
+      // Detect merged row: first token is "Period" or header-like, and contains multiple year/YTD entries
+      if (periodParts[0].toLowerCase() === "period" && periodParts.length > 2) {
+        // Skip "Period" label, then parse pairs like "YTD" "2026", "2025", "2024", etc.
+        // Values skip their header label (e.g. "Portfolio" "%")
+        const periods: string[] = [];
+        let i = 1;
+        while (i < periodParts.length) {
+          if (periodParts[i].toLowerCase() === "ytd" && i + 1 < periodParts.length) {
+            periods.push(`YTD ${periodParts[i + 1]}`);
+            i += 2;
+          } else if (/^\d{4}$/.test(periodParts[i])) {
+            periods.push(periodParts[i]);
+            i++;
+          } else {
+            i++;
+          }
+        }
+
+        // Extract percentage values from each column (skip header words)
+        const extractPcts = (parts: string[]) =>
+          parts.filter(p => p.includes("%")).map(p => parseVal(p));
+
+        const pcts1 = extractPcts(valueParts1);
+        const pcts2 = extractPcts(valueParts2);
+        const pcts3 = extractPcts(valueParts3);
+
+        for (let j = 0; j < periods.length; j++) {
+          const name = periods[j];
+          const isYtd = name.toLowerCase().startsWith("ytd");
+          const yearMatch = name.match(/\d{4}/);
+          result.push({
+            name,
+            portfolio: pcts1[j] ?? 0,
+            sp500: pcts2[j] ?? 0,
+            nasdaq: pcts3[j] ?? 0,
+            isYtd,
+            year: yearMatch ? parseInt(yearMatch[0]) : null,
+          });
+        }
+      } else {
+        // Normal single row
+        const isYtd = col0.toLowerCase().startsWith("ytd");
+        const yearMatch = col0.match(/\d{4}/);
+        result.push({
+          name: col0,
+          portfolio: parseVal(col1),
+          sp500: parseVal(col2),
+          nasdaq: parseVal(col3),
           isYtd,
           year: yearMatch ? parseInt(yearMatch[0]) : null,
-        };
-      });
+        });
+      }
+    }
+    return result;
   }, [rentabilidadData]);
 
   const ytdRow = allData.find(d => d.isYtd);
