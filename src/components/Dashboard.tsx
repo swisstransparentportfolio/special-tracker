@@ -16,6 +16,7 @@ interface Props {
 const TABS = [
   { key: "rentabilidad", label: "Performance" },
   { key: "portfolio", label: "Portfolio" },
+  { key: "special", label: "Special Situations" },
   { key: "estudiados", label: "Watchlist" },
   { key: "desarrollo", label: "Pipeline" },
 ] as const;
