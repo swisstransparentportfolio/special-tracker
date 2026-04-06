@@ -1,6 +1,8 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { FileText, BarChart3 } from "lucide-react";
+import { useSortableTable } from "@/hooks/use-sortable-table";
+import SortableHeader from "@/components/SortableHeader";
 
 interface Props {
   data: SheetData | null;
@@ -30,6 +32,8 @@ export default function EstudiadosTab({ data, loading }: Props) {
   }
 
   const { headers, rows } = data;
+  const { sortedRows, sort, toggleSort } = useSortableTable(rows);
+
   const nameIdx = getColIdx(headers, "company") !== -1 ? getColIdx(headers, "company") : getColIdx(headers, "empresa") !== -1 ? getColIdx(headers, "empresa") : 0;
   const tickerIdx = getColIdx(headers, "ticker");
   const sectorIdx = getColIdx(headers, "sector");
@@ -44,19 +48,16 @@ export default function EstudiadosTab({ data, loading }: Props) {
 
   const hasLinks = thesisIdx !== -1 || modelIdx !== -1;
 
-  // Stats
   const verdictCounts: Record<string, number> = {};
   rows.forEach(r => {
     const v = verdictIdx !== -1 ? r[verdictIdx]?.trim().toLowerCase() : "";
     if (v) verdictCounts[v] = (verdictCounts[v] || 0) + 1;
   });
-
   const reasonablyCount = verdictCounts["reasonably priced"] || 0;
   const attractivelyCount = verdictCounts["attractively priced"] || 0;
 
   return (
     <div className="animate-fade-in space-y-6">
-      {/* Summary */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border bg-card p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tracked Securities</p>
@@ -72,30 +73,27 @@ export default function EstudiadosTab({ data, loading }: Props) {
         </Card>
       </div>
 
-      {/* Table */}
       <Card className="overflow-x-auto border-border bg-card p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Watchlist — Researched Securities
-          </h3>
+          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Watchlist — Researched Securities</h3>
           <span className="text-xs text-muted-foreground">{rows.length} companies</span>
         </div>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b-2 border-border">
-              <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
-              {sectorIdx !== -1 && <th className="hidden px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Sector</th>}
-              {mcapIdx !== -1 && <th className="hidden px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">Mkt Cap</th>}
-              {peIdx !== -1 && <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">P/E</th>}
-              {ntmPeIdx !== -1 && <th className="hidden px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:table-cell">NTM P/E</th>}
-              {fcfIdx !== -1 && <th className="hidden px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:table-cell">FCF Yield</th>}
-              {verdictIdx !== -1 && <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Verdict</th>}
-              {statusIdx !== -1 && <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>}
+              <SortableHeader label="Company" colIdx={nameIdx} sort={sort} onToggle={toggleSort} className="text-left" />
+              {sectorIdx !== -1 && <SortableHeader label="Sector" colIdx={sectorIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
+              {mcapIdx !== -1 && <SortableHeader label="Mkt Cap" colIdx={mcapIdx} sort={sort} onToggle={toggleSort} className="hidden text-right lg:table-cell" />}
+              {peIdx !== -1 && <SortableHeader label="P/E" colIdx={peIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
+              {ntmPeIdx !== -1 && <SortableHeader label="NTM P/E" colIdx={ntmPeIdx} sort={sort} onToggle={toggleSort} className="hidden text-right sm:table-cell" />}
+              {fcfIdx !== -1 && <SortableHeader label="FCF Yield" colIdx={fcfIdx} sort={sort} onToggle={toggleSort} className="hidden text-right sm:table-cell" />}
+              {verdictIdx !== -1 && <SortableHeader label="Verdict" colIdx={verdictIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
+              {statusIdx !== -1 && <SortableHeader label="Status" colIdx={statusIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {hasLinks && <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Links</th>}
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => {
+            {sortedRows.map((row, i) => {
               const ticker = tickerIdx !== -1 ? row[tickerIdx] : "";
               const verdict = verdictIdx !== -1 ? row[verdictIdx]?.trim() : "";
               const status = statusIdx !== -1 ? row[statusIdx]?.trim() : "";
@@ -112,27 +110,17 @@ export default function EstudiadosTab({ data, loading }: Props) {
                   </td>
                   {sectorIdx !== -1 && <td className="hidden px-3 py-3 text-muted-foreground md:table-cell">{row[sectorIdx]}</td>}
                   {mcapIdx !== -1 && <td className="hidden px-3 py-3 text-right text-foreground lg:table-cell">{row[mcapIdx]}</td>}
-                  {peIdx !== -1 && (
-                    <td className="px-3 py-3 text-right text-foreground">{row[peIdx] || "—"}</td>
-                  )}
-                  {ntmPeIdx !== -1 && (
-                    <td className="hidden px-3 py-3 text-right text-foreground sm:table-cell">{row[ntmPeIdx] || "—"}</td>
-                  )}
-                  {fcfIdx !== -1 && (
-                    <td className="hidden px-3 py-3 text-right text-foreground sm:table-cell">{row[fcfIdx] || "—"}</td>
-                  )}
+                  {peIdx !== -1 && <td className="px-3 py-3 text-right text-foreground">{row[peIdx] || "—"}</td>}
+                  {ntmPeIdx !== -1 && <td className="hidden px-3 py-3 text-right text-foreground sm:table-cell">{row[ntmPeIdx] || "—"}</td>}
+                  {fcfIdx !== -1 && <td className="hidden px-3 py-3 text-right text-foreground sm:table-cell">{row[fcfIdx] || "—"}</td>}
                   {verdictIdx !== -1 && (
                     <td className="px-3 py-3 text-center">
-                      <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${verdictClass}`}>
-                        {verdict || "—"}
-                      </span>
+                      <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${verdictClass}`}>{verdict || "—"}</span>
                     </td>
                   )}
                   {statusIdx !== -1 && (
                     <td className="px-3 py-3 text-center">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}`}>
-                        {status || "—"}
-                      </span>
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}`}>{status || "—"}</span>
                     </td>
                   )}
                   {hasLinks && (
