@@ -25,17 +25,21 @@ const COLORS = [
 
 const RADIAN = Math.PI / 180;
 
-function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, name, value }: any) {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  if (value < 3.5) return null;
-  return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700}>
-      <tspan x={x} dy="-6">{name}</tspan>
-      <tspan x={x} dy="14">{value.toFixed(1)}%</tspan>
-    </text>
-  );
+function renderCustomLabel(isMobile: boolean) {
+  return ({ cx, cy, midAngle, innerRadius, outerRadius, name, value }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const minSlice = isMobile ? 5 : 3.5;
+    const fontSize = isMobile ? 9 : 11;
+    if (value < minSlice) return null;
+    return (
+      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fontSize} fontWeight={700}>
+        <tspan x={x} dy={isMobile ? "-5" : "-6"}>{name}</tspan>
+        <tspan x={x} dy={isMobile ? "12" : "14"}>{value.toFixed(1)}%</tspan>
+      </text>
+    );
+  };
 }
 
 function findCol(headers: string[], ...names: string[]): number {
