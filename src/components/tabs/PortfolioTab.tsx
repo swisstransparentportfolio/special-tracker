@@ -5,9 +5,6 @@ import { FileText, BarChart3 } from "lucide-react";
 import { useSortableTable } from "@/hooks/use-sortable-table";
 import SortableHeader from "@/components/SortableHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { FileText, BarChart3 } from "lucide-react";
-import { useSortableTable } from "@/hooks/use-sortable-table";
-import SortableHeader from "@/components/SortableHeader";
 
 interface Props {
   portfolioData: SheetData | null;
