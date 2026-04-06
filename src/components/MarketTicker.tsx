@@ -163,14 +163,15 @@ export default function MarketTicker() {
     if (!el) return;
     const diff = dragStartX.current - e.clientX;
     let newPos = dragStartPos.current + diff;
-    const halfWidth = el.scrollWidth / 2;
-    if (halfWidth > 0) {
-      while (newPos < 0) newPos += halfWidth;
-      while (newPos >= halfWidth) newPos -= halfWidth;
+    const repeatCount = Math.max(3, Math.ceil(2400 / (items.length * 200)) + 1);
+    const setWidth = el.scrollWidth / repeatCount;
+    if (setWidth > 0) {
+      while (newPos < 0) newPos += setWidth;
+      while (newPos >= setWidth) newPos -= setWidth;
     }
     posRef.current = newPos;
     el.style.transform = `translateX(-${posRef.current}px)`;
-  }, []);
+  }, [items.length]);
 
   const handlePointerUp = useCallback(() => {
     isDragging.current = false;
