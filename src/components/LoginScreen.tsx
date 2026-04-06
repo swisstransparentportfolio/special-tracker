@@ -15,7 +15,6 @@ const DEFAULT_SHEET_ID = "1i6k_807-JF8YIUEROyAl7edr7RFWwALy";
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [sheetId, setSheetId] = useState(DEFAULT_SHEET_ID);
   const [error, setError] = useState("");
 
   const extractSheetId = (input: string): string => {
