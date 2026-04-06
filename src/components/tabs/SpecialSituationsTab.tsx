@@ -53,6 +53,7 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
   const profitIdx = getColIdx(headers, "profit");
   const expirationIdx = getColIdx(headers, "expiration");
   const linkIdx = getColIdx(headers, "link") !== -1 ? getColIdx(headers, "link") : getColIdx(headers, "filing link");
+  const resultIdx = getColIdx(headers, "result");
 
   // Summary stats — active = expiration in the future
   const activeRows = rows.filter(r => getDaysUntil(r[expirationIdx] || "") >= 0);
