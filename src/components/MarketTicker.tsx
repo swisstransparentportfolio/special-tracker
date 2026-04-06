@@ -132,12 +132,14 @@ export default function MarketTicker() {
     if (!el || items.length === 0) return;
 
     const speed = 0.5;
+    // One "set" width = total scrollWidth / repeatCount
+    const getSetWidth = () => el.scrollWidth / Math.max(3, Math.ceil(2400 / (items.length * 200)) + 1);
 
     function tick() {
       if (!isDragging.current && el) {
         posRef.current += speed;
-        const halfWidth = el.scrollWidth / 2;
-        if (halfWidth > 0 && posRef.current >= halfWidth) posRef.current -= halfWidth;
+        const setWidth = getSetWidth();
+        if (setWidth > 0 && posRef.current >= setWidth) posRef.current -= setWidth;
         el.style.transform = `translateX(-${posRef.current}px)`;
       }
       animRef.current = requestAnimationFrame(tick);
