@@ -10,7 +10,7 @@ interface LoginScreenProps {
   onLogin: (sheetId: string) => void;
 }
 
-const CORRECT_PASSWORD = "STP2026";
+const CORRECT_PASSWORD = "stp2026";
 const DEFAULT_SHEET_ID = "1i6k_807-JF8YIUEROyAl7edr7RFWwALy";
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
