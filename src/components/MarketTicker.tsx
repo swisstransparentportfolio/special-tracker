@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
 interface TickerItem {
@@ -42,73 +42,99 @@ const SYMBOLS: { symbol: string; label: string }[] = [
   { symbol: "CL=F", label: "Crude Oil" },
 ];
 
-const YAHOO_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
+const LABEL_MAP = Object.fromEntries(SYMBOLS.map((s) => [s.symbol, s.label]));
 
-async function fetchTickerData(symbol: string): Promise<Omit<TickerItem, "label">> {
+const FX_SYMBOLS = ["EURUSD=X", "EURGBP=X", "EURJPY=X", "EURAUD=X", "CHFEUR=X"];
+
+function formatPrice(price: number, symbol: string): string {
+  if (FX_SYMBOLS.includes(symbol)) return price.toFixed(4);
+  if (price > 10000) return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return price.toFixed(2);
+}
+
+// Batch fetch all quotes in one request using v7/finance/quote
+async function fetchAllQuotes(): Promise<TickerItem[]> {
   try {
-    const targetUrl = `${YAHOO_BASE}/${symbol}?interval=1d&range=2d`;
-    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`);
-    if (!res.ok) return { symbol, price: null, change: null, changePercent: null };
+    const symbolList = SYMBOLS.map((s) => s.symbol).join(",");
+    const rawUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbolList)}`;
+    const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("fetch failed");
     const data = await res.json();
-    const meta = data?.chart?.result?.[0]?.meta;
-    if (!meta) return { symbol, price: null, change: null, changePercent: null };
-
-    const price = meta.regularMarketPrice;
-    const prevClose = meta.chartPreviousClose || meta.previousClose;
-    if (!price || !prevClose) return { symbol, price, change: null, changePercent: null };
-
-    const change = price - prevClose;
-    const changePercent = (change / prevClose) * 100;
-    return { symbol, price, change, changePercent };
+    const results: TickerItem[] = [];
+    for (const q of data?.quoteResponse?.result ?? []) {
+      const symbol = q.symbol as string;
+      const price = q.regularMarketPrice ?? null;
+      const change = q.regularMarketChange ?? null;
+      const changePercent = q.regularMarketChangePercent ?? null;
+      if (price !== null) {
+        results.push({ symbol, label: LABEL_MAP[symbol] ?? symbol, price, change, changePercent });
+      }
+    }
+    return results;
   } catch {
-    return { symbol, price: null, change: null, changePercent: null };
+    // Fallback: fetch individually in parallel (smaller batches)
+    return fetchIndividually();
   }
 }
 
-function formatPrice(price: number, symbol: string): string {
-  if (["EURUSD=X", "EURGBP=X", "EURJPY=X", "EURAUD=X", "CHFEUR=X"].includes(symbol)) {
-    return price.toFixed(4);
-  }
-  if (price > 10000) return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return price.toFixed(2);
+async function fetchIndividually(): Promise<TickerItem[]> {
+  const results = await Promise.all(
+    SYMBOLS.map(async (s) => {
+      try {
+        const rawUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${s.symbol}?interval=1d&range=2d`;
+        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const meta = data?.chart?.result?.[0]?.meta;
+        if (!meta) return null;
+        const price = meta.regularMarketPrice;
+        const prevClose = meta.chartPreviousClose || meta.previousClose;
+        if (!price || !prevClose) return null;
+        const change = price - prevClose;
+        const changePercent = (change / prevClose) * 100;
+        return { symbol: s.symbol, label: s.label, price, change, changePercent } as TickerItem;
+      } catch {
+        return null;
+      }
+    })
+  );
+  return results.filter((r): r is TickerItem => r !== null);
 }
 
 export default function MarketTicker() {
   const [items, setItems] = useState<TickerItem[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
+  const posRef = useRef(0);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragStartPos = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
-      const results = await Promise.all(
-        SYMBOLS.map(async (s) => {
-          const data = await fetchTickerData(s.symbol);
-          return { ...data, label: s.label };
-        })
-      );
-      if (!cancelled) setItems(results.filter((r) => r.price !== null));
+      const results = await fetchAllQuotes();
+      if (!cancelled) setItems(results);
     }
-
     load();
     const interval = setInterval(load, 60_000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
+  // Auto-scroll animation
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || items.length === 0) return;
 
-    let pos = 0;
     const speed = 0.5;
 
     function tick() {
-      pos += speed;
-      if (el) {
+      if (!isDragging.current && el) {
+        posRef.current += speed;
         const halfWidth = el.scrollWidth / 2;
-        if (pos >= halfWidth) pos -= halfWidth;
-        el.style.transform = `translateX(-${pos}px)`;
+        if (halfWidth > 0 && posRef.current >= halfWidth) posRef.current -= halfWidth;
+        el.style.transform = `translateX(-${posRef.current}px)`;
       }
       animRef.current = requestAnimationFrame(tick);
     }
@@ -117,13 +143,45 @@ export default function MarketTicker() {
     return () => cancelAnimationFrame(animRef.current);
   }, [items]);
 
+  // Drag handlers
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    isDragging.current = true;
+    dragStartX.current = e.clientX;
+    dragStartPos.current = posRef.current;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDragging.current) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const diff = dragStartX.current - e.clientX;
+    let newPos = dragStartPos.current + diff;
+    const halfWidth = el.scrollWidth / 2;
+    if (halfWidth > 0) {
+      while (newPos < 0) newPos += halfWidth;
+      while (newPos >= halfWidth) newPos -= halfWidth;
+    }
+    posRef.current = newPos;
+    el.style.transform = `translateX(-${posRef.current}px)`;
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
+
   if (items.length === 0) return null;
 
-  // Duplicate items for seamless loop
   const displayed = [...items, ...items];
 
   return (
-    <div className="w-full overflow-hidden border-b border-border bg-card/80 backdrop-blur-sm">
+    <div
+      className="w-full overflow-hidden border-b border-border bg-card/80 backdrop-blur-sm select-none cursor-grab active:cursor-grabbing"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+    >
       <div ref={scrollRef} className="flex whitespace-nowrap py-2" style={{ willChange: "transform" }}>
         {displayed.map((item, i) => {
           const isPositive = (item.changePercent ?? 0) >= 0;
