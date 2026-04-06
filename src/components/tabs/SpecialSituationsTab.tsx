@@ -133,14 +133,14 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
                     {ticker && <div className="text-xs text-muted-foreground">{ticker}</div>}
                   </td>
                   {typeIdx !== -1 && (
-                    <td className="px-2 sm:px-3 py-3.5 text-center">
+                    <td className="px-2 lg:px-3 py-3.5 text-center">
                       {(() => {
                         const t = (row[typeIdx] || "—").trim();
                         const short = t.toLowerCase() === "tender offer" ? "Tender" : t;
                         return (
                           <>
-                            <span className="sm:hidden rounded-full border border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground whitespace-nowrap">{short}</span>
-                            <span className="hidden sm:inline rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">{t}</span>
+                            <span className="lg:hidden rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground whitespace-nowrap">{short}</span>
+                            <span className="hidden lg:inline rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground whitespace-nowrap">{t}</span>
                           </>
                         );
                       })()}
