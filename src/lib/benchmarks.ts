@@ -1,5 +1,4 @@
 const YAHOO_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
-const CORS_PROXY = "https://corsproxy.io/?url=";
 
 interface BenchmarkData {
   sp500Ytd: number | null;
