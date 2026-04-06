@@ -7,6 +7,7 @@ import PortfolioTab from "./tabs/PortfolioTab";
 import EstudiadosTab from "./tabs/EstudiadosTab";
 import EnDesarrolloTab from "./tabs/EnDesarrolloTab";
 import SpecialSituationsTab from "./tabs/SpecialSituationsTab";
+import MarketTicker from "./MarketTicker";
 
 interface Props {
   sheetId: string;
@@ -95,6 +96,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
+      <MarketTicker />
       <DashboardHeader
         lastUpdate={lastUpdate}
         onRefresh={loadData}
