@@ -84,9 +84,9 @@ export default function EstudiadosTab({ data, loading }: Props) {
           <thead>
             <tr className="border-b-2 border-border">
               <SortableHeader label="Company" colIdx={nameIdx} sort={sort} onToggle={toggleSort} className="text-left" />
+              {sectorIdx !== -1 && <SortableHeader label="Sector" colIdx={sectorIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
               {ccyIdx !== -1 && <SortableHeader label="CCY" colIdx={ccyIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {priceIdx !== -1 && <SortableHeader label="Price" colIdx={priceIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
-              {sectorIdx !== -1 && <SortableHeader label="Sector" colIdx={sectorIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
               {mcapIdx !== -1 && <SortableHeader label="Mkt Cap" colIdx={mcapIdx} sort={sort} onToggle={toggleSort} className="hidden text-right lg:table-cell" />}
               {peIdx !== -1 && <SortableHeader label="P/E" colIdx={peIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
               {ntmPeIdx !== -1 && <SortableHeader label="NTM P/E" colIdx={ntmPeIdx} sort={sort} onToggle={toggleSort} className="hidden text-right sm:table-cell" />}
@@ -112,9 +112,9 @@ export default function EstudiadosTab({ data, loading }: Props) {
                     <div className="font-medium text-foreground">{row[nameIdx]}</div>
                     {ticker && <div className="text-xs text-muted-foreground">{ticker}</div>}
                   </td>
+                  {sectorIdx !== -1 && <td className="hidden px-3 py-3 text-muted-foreground md:table-cell">{row[sectorIdx]}</td>}
                   {ccyIdx !== -1 && <td className="px-3 py-3 text-center text-muted-foreground">{row[ccyIdx] || "—"}</td>}
                   {priceIdx !== -1 && <td className="px-3 py-3 text-right text-foreground">{row[priceIdx] || "—"}</td>}
-                  {sectorIdx !== -1 && <td className="hidden px-3 py-3 text-muted-foreground md:table-cell">{row[sectorIdx]}</td>}
                   {mcapIdx !== -1 && <td className="hidden px-3 py-3 text-right text-foreground lg:table-cell">{row[mcapIdx]}</td>}
                   {peIdx !== -1 && <td className="px-3 py-3 text-right text-foreground">{row[peIdx] || "—"}</td>}
                   {ntmPeIdx !== -1 && <td className="hidden px-3 py-3 text-right text-foreground sm:table-cell">{row[ntmPeIdx] || "—"}</td>}
