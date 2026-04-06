@@ -112,6 +112,8 @@ export default function EstudiadosTab({ data, loading }: Props) {
                     <div className="font-medium text-foreground">{row[nameIdx]}</div>
                     {ticker && <div className="text-xs text-muted-foreground">{ticker}</div>}
                   </td>
+                  {ccyIdx !== -1 && <td className="px-3 py-3 text-center text-muted-foreground">{row[ccyIdx] || "—"}</td>}
+                  {priceIdx !== -1 && <td className="px-3 py-3 text-right text-foreground">{row[priceIdx] || "—"}</td>}
                   {sectorIdx !== -1 && <td className="hidden px-3 py-3 text-muted-foreground md:table-cell">{row[sectorIdx]}</td>}
                   {mcapIdx !== -1 && <td className="hidden px-3 py-3 text-right text-foreground lg:table-cell">{row[mcapIdx]}</td>}
                   {peIdx !== -1 && <td className="px-3 py-3 text-right text-foreground">{row[peIdx] || "—"}</td>}
