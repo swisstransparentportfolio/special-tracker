@@ -52,54 +52,38 @@ function formatPrice(price: number, symbol: string): string {
   return price.toFixed(2);
 }
 
-// Batch fetch all quotes in one request using v7/finance/quote
+// Fetch quotes using v8/chart endpoint (v7 is blocked)
 async function fetchAllQuotes(): Promise<TickerItem[]> {
-  try {
-    const symbolList = SYMBOLS.map((s) => s.symbol).join(",");
-    const rawUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbolList)}`;
-    const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("fetch failed");
-    const data = await res.json();
-    const results: TickerItem[] = [];
-    for (const q of data?.quoteResponse?.result ?? []) {
-      const symbol = q.symbol as string;
-      const price = q.regularMarketPrice ?? null;
-      const change = q.regularMarketChange ?? null;
-      const changePercent = q.regularMarketChangePercent ?? null;
-      if (price !== null) {
-        results.push({ symbol, label: LABEL_MAP[symbol] ?? symbol, price, change, changePercent });
-      }
-    }
-    return results;
-  } catch {
-    // Fallback: fetch individually in parallel (smaller batches)
-    return fetchIndividually();
-  }
-}
+  // Fetch in parallel batches of 6 to avoid overwhelming the proxy
+  const BATCH_SIZE = 6;
+  const allResults: TickerItem[] = [];
 
-async function fetchIndividually(): Promise<TickerItem[]> {
-  const results = await Promise.all(
-    SYMBOLS.map(async (s) => {
-      try {
-        const rawUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${s.symbol}?interval=1d&range=2d`;
-        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`);
-        if (!res.ok) return null;
-        const data = await res.json();
-        const meta = data?.chart?.result?.[0]?.meta;
-        if (!meta) return null;
-        const price = meta.regularMarketPrice;
-        const prevClose = meta.chartPreviousClose || meta.previousClose;
-        if (!price || !prevClose) return null;
-        const change = price - prevClose;
-        const changePercent = (change / prevClose) * 100;
-        return { symbol: s.symbol, label: s.label, price, change, changePercent } as TickerItem;
-      } catch {
-        return null;
-      }
-    })
-  );
-  return results.filter((r): r is TickerItem => r !== null);
+  for (let i = 0; i < SYMBOLS.length; i += BATCH_SIZE) {
+    const batch = SYMBOLS.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map(async (s) => {
+        try {
+          const rawUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.symbol)}?interval=1d&range=2d`;
+          const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`);
+          if (!res.ok) return null;
+          const data = await res.json();
+          const meta = data?.chart?.result?.[0]?.meta;
+          if (!meta) return null;
+          const price = meta.regularMarketPrice;
+          const prevClose = meta.chartPreviousClose || meta.previousClose;
+          if (!price || !prevClose) return null;
+          const change = price - prevClose;
+          const changePercent = (change / prevClose) * 100;
+          return { symbol: s.symbol, label: s.label, price, change, changePercent } as TickerItem;
+        } catch {
+          return null;
+        }
+      })
+    );
+    allResults.push(...results.filter((r): r is TickerItem => r !== null));
+  }
+
+  return allResults;
 }
 
 export default function MarketTicker() {
