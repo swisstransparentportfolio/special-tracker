@@ -81,6 +81,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
           </form>
         </div>
       </div>
+      </div>
     </div>
   );
 }
