@@ -58,7 +58,8 @@ export default function SpecialSituationsTab({ data, loading }: Props) {
   // Summary stats — active = expiration in the future
   const activeRows = rows.filter(r => getDaysUntil(r[expirationIdx] || "") >= 0);
   const activeCount = activeRows.length;
-  const avgProfit = rows.reduce((sum, r) => sum + parseNum(r[profitIdx]), 0) / (rows.length || 1);
+  const profitValues = rows.map(r => r[profitIdx] || "").filter(v => v.includes("$")).map(v => parseNum(v));
+  const avgProfit = profitValues.length > 0 ? profitValues.reduce((a, b) => a + b, 0) / profitValues.length : 0;
 
   return (
     <div className="animate-fade-in space-y-6">
