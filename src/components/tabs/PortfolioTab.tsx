@@ -136,7 +136,13 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
         </Card>
       </div>
 
-      {pieData.length > 0 && <PieChartCard pieData={pieData} />}
+      {pieData.length > 0 && (
+        <Card className="border-border bg-card p-4 sm:p-5">
+          <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
+          <p className="mb-3 text-xs text-muted-foreground">Click a segment to see details</p>
+          <PieChartInner pieData={pieData} />
+        </Card>
+      )}
 
       <Card className="overflow-x-auto border-border bg-card p-4">
         <div className="mb-3 flex items-center justify-between">
