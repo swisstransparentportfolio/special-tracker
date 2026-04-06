@@ -86,9 +86,26 @@ async function fetchAllQuotes(): Promise<TickerItem[]> {
   return allResults;
 }
 
+const CACHE_KEY = "marketTickerCache";
+
+function getCachedItems(): TickerItem[] {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {}
+  return [];
+}
+
+function setCachedItems(items: TickerItem[]) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(items));
+  } catch {}
+}
+
 export default function MarketTicker() {
-  const [items, setItems] = useState<TickerItem[]>([]);
+  const [items, setItems] = useState<TickerItem[]>(getCachedItems);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
   const posRef = useRef(0);
   const isDragging = useRef(false);
@@ -99,7 +116,10 @@ export default function MarketTicker() {
     let cancelled = false;
     async function load() {
       const results = await fetchAllQuotes();
-      if (!cancelled) setItems(results);
+      if (!cancelled && results.length > 0) {
+        setItems(results);
+        setCachedItems(results);
+      }
     }
     load();
     const interval = setInterval(load, 15 * 60_000);
