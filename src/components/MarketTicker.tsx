@@ -73,36 +73,29 @@ async function fetchWithProxy(url: string): Promise<Response> {
   throw new Error("All proxies failed");
 }
 
-// Fetch quotes using v8/chart endpoint (v7 is blocked)
+// Fetch quotes — all in parallel for speed, with per-request timeout
 async function fetchAllQuotes(): Promise<TickerItem[]> {
-  const BATCH_SIZE = 6;
-  const allResults: TickerItem[] = [];
+  const results = await Promise.all(
+    SYMBOLS.map(async (s) => {
+      try {
+        const rawUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.symbol)}?interval=1d&range=2d`;
+        const res = await fetchWithProxy(rawUrl);
+        const data = await res.json();
+        const meta = data?.chart?.result?.[0]?.meta;
+        if (!meta) return null;
+        const price = meta.regularMarketPrice;
+        const prevClose = meta.chartPreviousClose || meta.previousClose;
+        if (!price || !prevClose) return null;
+        const change = price - prevClose;
+        const changePercent = (change / prevClose) * 100;
+        return { symbol: s.symbol, label: s.label, price, change, changePercent } as TickerItem;
+      } catch {
+        return null;
+      }
+    })
+  );
 
-  for (let i = 0; i < SYMBOLS.length; i += BATCH_SIZE) {
-    const batch = SYMBOLS.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(
-      batch.map(async (s) => {
-        try {
-          const rawUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.symbol)}?interval=1d&range=2d`;
-          const res = await fetchWithProxy(rawUrl);
-          const data = await res.json();
-          const meta = data?.chart?.result?.[0]?.meta;
-          if (!meta) return null;
-          const price = meta.regularMarketPrice;
-          const prevClose = meta.chartPreviousClose || meta.previousClose;
-          if (!price || !prevClose) return null;
-          const change = price - prevClose;
-          const changePercent = (change / prevClose) * 100;
-          return { symbol: s.symbol, label: s.label, price, change, changePercent } as TickerItem;
-        } catch {
-          return null;
-        }
-      })
-    );
-    allResults.push(...results.filter((r): r is TickerItem => r !== null));
-  }
-
-  return allResults;
+  return results.filter((r): r is TickerItem => r !== null);
 }
 
 const CACHE_KEY = "marketTickerCache";
