@@ -26,6 +26,7 @@ type TabKey = typeof TABS[number]["key"];
 const SHEET_NAMES: Record<TabKey, string[]> = {
   rentabilidad: ["Performance", "Rentabilidad", "rentabilidad", "Returns"],
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
+  special: ["Special Situations", "Special", "Situaciones Especiales"],
   estudiados: ["Watchlist", "Estudiados", "estudiados", "Estudiadas"],
   desarrollo: ["Pipeline", "En desarrollo", "Desarrollo", "En Desarrollo"],
 };
