@@ -96,6 +96,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
+      <MarketTicker />
       <DashboardHeader
         lastUpdate={lastUpdate}
         onRefresh={loadData}
