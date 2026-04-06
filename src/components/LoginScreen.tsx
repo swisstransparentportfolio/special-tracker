@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import logoSp from "@/assets/logo-sp.jpg";
+import MarketTicker from "./MarketTicker";
 
 interface LoginScreenProps {
   onLogin: (sheetId: string) => void;
