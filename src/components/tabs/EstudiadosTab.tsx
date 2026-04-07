@@ -2,6 +2,7 @@ import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { FileText, BarChart3 } from "lucide-react";
 import { useSortableTable } from "@/hooks/use-sortable-table";
+import RiskBadge from "@/components/RiskBadge";
 import SortableHeader from "@/components/SortableHeader";
 
 interface Props {
@@ -47,6 +48,7 @@ export default function EstudiadosTab({ data, loading }: Props) {
   const statusIdx = getColIdx(headers, "status");
   const thesisIdx = getColIdx(headers, "research");
   const modelIdx = getColIdx(headers, "model");
+  const riskIdx = getColIdx(headers, "risk");
 
   const hasLinks = thesisIdx !== -1 || modelIdx !== -1;
 
@@ -93,6 +95,7 @@ export default function EstudiadosTab({ data, loading }: Props) {
               {fcfIdx !== -1 && <SortableHeader label="FCF Yield" colIdx={fcfIdx} sort={sort} onToggle={toggleSort} className="hidden text-right sm:table-cell" />}
               {verdictIdx !== -1 && <SortableHeader label="Verdict" colIdx={verdictIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {statusIdx !== -1 && <SortableHeader label="Status" colIdx={statusIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
+              {riskIdx !== -1 && <SortableHeader label="Risk" colIdx={riskIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {hasLinks && <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Links</th>}
             </tr>
           </thead>
@@ -129,6 +132,7 @@ export default function EstudiadosTab({ data, loading }: Props) {
                       <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}`}>{status || "—"}</span>
                     </td>
                   )}
+                  {riskIdx !== -1 && <td className="px-3 py-3 text-center"><RiskBadge value={row[riskIdx]} /></td>}
                   {hasLinks && (
                     <td className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
