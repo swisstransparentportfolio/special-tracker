@@ -138,11 +138,14 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
       </div>
 
       {pieData.length > 0 && (
-        <Card className="border-border bg-card p-4 sm:p-5">
-          <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
-          <p className="mb-3 text-xs text-muted-foreground">Click a segment to see details</p>
-          <PieChartInner pieData={pieData} />
-        </Card>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Card className="border-border bg-card p-4 sm:p-5 lg:col-span-2">
+            <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
+            <p className="mb-3 text-xs text-muted-foreground">Click a segment to see details</p>
+            <PieChartInner pieData={pieData} />
+          </Card>
+          <LatestMovements data={movementsData} />
+        </div>
       )}
 
       <Card className="overflow-x-auto border-border bg-card p-4">
