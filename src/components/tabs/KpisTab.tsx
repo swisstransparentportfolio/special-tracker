@@ -271,31 +271,15 @@ export default function KpisTab() {
     loadData();
   }, [loadData]);
 
-  if (loading) {
-    return (
-      <div className="space-y-4 animate-fade-in">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-52 animate-pulse rounded-lg bg-card border border-border" />
-          ))}
-        </div>
-        <div className="h-72 animate-pulse rounded-lg bg-card border border-border" />
-        <div className="h-72 animate-pulse rounded-lg bg-card border border-border" />
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <Card className="flex h-64 items-center justify-center border-border bg-card">
-        <p className="text-muted-foreground">Unable to load market KPIs</p>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header with refresh */}
+      {/* Loading indicator overlay */}
+      {loading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <RefreshCw className="h-3 w-3 animate-spin" />
+          Updating with live data…
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Market KPIs</h2>
