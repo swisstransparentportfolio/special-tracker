@@ -55,6 +55,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
     portfolio: null,
     special: null,
     estudiados: null,
+    swissWatchlist: null,
     desarrollo: null,
   });
 
