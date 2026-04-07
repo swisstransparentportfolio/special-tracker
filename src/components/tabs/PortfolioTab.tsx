@@ -49,6 +49,17 @@ function findCol(headers: string[], ...names: string[]): number {
   return -1;
 }
 
+function formatAge(val: string | undefined): string {
+  if (!val || val.trim() === "") return "—";
+  const parsed = new Date(val.trim());
+  if (isNaN(parsed.getTime())) return val;
+  const now = new Date();
+  const diffMs = now.getTime() - parsed.getTime();
+  const years = diffMs / (1000 * 60 * 60 * 24 * 365.25);
+  if (years < 1) return `${Math.round(years * 12)}m`;
+  return `${years.toFixed(1)}y`;
+}
+
 export default function PortfolioTab({ portfolioData, movementsData, loading }: Props) {
   if (loading) return <LoadingSkeleton />;
   if (!portfolioData || portfolioData.rows.length === 0) return <EmptyState />;
@@ -204,7 +215,7 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
                       ) : "—"}
                     </td>
                   )}
-                  {ageIdx !== -1 && <td className="hidden px-3 py-3 text-center text-muted-foreground md:table-cell">{row[ageIdx] || "—"}</td>}
+                  {ageIdx !== -1 && <td className="hidden px-3 py-3 text-center text-muted-foreground md:table-cell">{formatAge(row[ageIdx])}</td>}
                   {riskIdx !== -1 && <td className="px-3 py-3 text-center"><RiskBadge value={row[riskIdx]} /></td>}
                   {hasLinks && (
                     <td className="px-3 py-3 text-right">
