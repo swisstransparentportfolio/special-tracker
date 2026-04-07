@@ -8,6 +8,7 @@ import EstudiadosTab from "./tabs/EstudiadosTab";
 import SwissWatchlistTab from "./tabs/SwissWatchlistTab";
 import EnDesarrolloTab from "./tabs/EnDesarrolloTab";
 import SpecialSituationsTab from "./tabs/SpecialSituationsTab";
+import KpisTab from "./tabs/KpisTab";
 import MarketTicker from "./MarketTicker";
 
 interface Props {
