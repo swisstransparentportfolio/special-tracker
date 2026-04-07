@@ -2,6 +2,7 @@ import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { FileText, BarChart3 } from "lucide-react";
 import { useSortableTable } from "@/hooks/use-sortable-table";
+import RiskBadge from "@/components/RiskBadge";
 import SortableHeader from "@/components/SortableHeader";
 
 interface Props {
