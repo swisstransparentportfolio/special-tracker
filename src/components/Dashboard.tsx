@@ -26,23 +26,27 @@ const TABS = [
 
 type TabKey = typeof TABS[number]["key"];
 
-const SHEET_NAMES: Record<TabKey, string[]> = {
+type AllTabs = TabKey | "movements";
+
+const SHEET_NAMES: Record<AllTabs, string[]> = {
   rentabilidad: ["Performance", "Rentabilidad", "rentabilidad", "Returns"],
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
   special: ["Special Situations", "Special", "Situaciones Especiales"],
   estudiados: ["Watchlist", "Estudiados", "estudiados", "Estudiadas"],
   swissWatchlist: ["Swiss Watchlist", "Swiss"],
   desarrollo: ["Pipeline", "En desarrollo", "Desarrollo", "En Desarrollo"],
+  movements: ["Movements", "Movimientos", "Latest Movements"],
 };
 
 // Expected header keywords per tab to validate we got the right sheet
-const HEADER_VALIDATORS: Record<TabKey, string[]> = {
+const HEADER_VALIDATORS: Record<AllTabs, string[]> = {
   rentabilidad: ["period", "portfolio"],
   portfolio: ["ticker", "weight", "peso", "company", "empresa"],
   special: ["name", "type", "tender", "expiration", "profit"],
   estudiados: ["ticker", "sector", "company", "empresa"],
   swissWatchlist: ["ticker", "sector", "company", "empresa"],
   desarrollo: ["status", "priority", "type", "tipo"],
+  movements: ["type", "company", "ticker", "date", "price"],
 };
 
 export default function Dashboard({ sheetId, onLogout }: Props) {
