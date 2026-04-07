@@ -263,7 +263,7 @@ function LatestMovements({ data }: { data: SheetData | null }) {
           const change = changeIdx !== -1 ? row[changeIdx]?.trim() : "";
 
           return (
-            <div key={i} className="flex items-center gap-3 border-b border-border/30 py-2.5 last:border-0">
+            <div key={i} className="flex items-center gap-4 border-b border-border/30 py-3 last:border-0">
               <div className="flex-shrink-0">
                 {isBuy ? (
                   <TrendingUp className="h-4 w-4 text-success" />
