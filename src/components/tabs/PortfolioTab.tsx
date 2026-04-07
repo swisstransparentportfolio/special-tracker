@@ -1,13 +1,14 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { FileText, BarChart3 } from "lucide-react";
+import { FileText, BarChart3, TrendingUp, TrendingDown } from "lucide-react";
 import { useSortableTable } from "@/hooks/use-sortable-table";
 import SortableHeader from "@/components/SortableHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Props {
   portfolioData: SheetData | null;
+  movementsData: SheetData | null;
   loading: boolean;
 }
 
