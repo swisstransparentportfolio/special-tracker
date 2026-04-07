@@ -95,6 +95,7 @@ export default function SwissWatchlistTab({ data, loading }: Props) {
               {fcfIdx !== -1 && <SortableHeader label="FCF Yield" colIdx={fcfIdx} sort={sort} onToggle={toggleSort} className="hidden text-right sm:table-cell" />}
               {verdictIdx !== -1 && <SortableHeader label="Verdict" colIdx={verdictIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {statusIdx !== -1 && <SortableHeader label="Status" colIdx={statusIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
+              {riskIdx !== -1 && <SortableHeader label="Risk" colIdx={riskIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {hasLinks && <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Links</th>}
             </tr>
           </thead>
