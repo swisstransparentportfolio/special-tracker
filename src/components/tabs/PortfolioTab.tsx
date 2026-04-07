@@ -161,8 +161,8 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
               {geoIdx !== -1 && <SortableHeader label="Geography" colIdx={geoIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
               {currencyIdx !== -1 && <SortableHeader label="Ccy" colIdx={currencyIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {priceIdx !== -1 && <SortableHeader label="Price" colIdx={priceIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
-              {targetIdx !== -1 && <SortableHeader label="P.O. 3Y" colIdx={targetIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
-              {cagrIdx !== -1 && <SortableHeader label="CAGR 3Y" colIdx={cagrIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
+              {targetIdx !== -1 && <SortableHeader label="Entry Price" colIdx={targetIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
+              {cagrIdx !== -1 && <SortableHeader label="Total Return" colIdx={cagrIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
               {weightIdx !== -1 && <SortableHeader label="Weight" colIdx={weightIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
               {detailIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detail</th>}
               {ageIdx !== -1 && <SortableHeader label="Age" colIdx={ageIdx} sort={sort} onToggle={toggleSort} className="hidden text-center md:table-cell" />}
