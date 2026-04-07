@@ -5,6 +5,7 @@ import DashboardHeader from "./DashboardHeader";
 import RentabilidadTab from "./tabs/RentabilidadTab";
 import PortfolioTab from "./tabs/PortfolioTab";
 import EstudiadosTab from "./tabs/EstudiadosTab";
+import SwissWatchlistTab from "./tabs/SwissWatchlistTab";
 import EnDesarrolloTab from "./tabs/EnDesarrolloTab";
 import SpecialSituationsTab from "./tabs/SpecialSituationsTab";
 import MarketTicker from "./MarketTicker";
@@ -19,6 +20,7 @@ const TABS = [
   { key: "portfolio", label: "Portfolio" },
   { key: "special", label: "Special Situations" },
   { key: "estudiados", label: "Watchlist" },
+  { key: "swissWatchlist", label: "Swiss Watchlist" },
   { key: "desarrollo", label: "Pipeline" },
 ] as const;
 
@@ -29,6 +31,7 @@ const SHEET_NAMES: Record<TabKey, string[]> = {
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
   special: ["Special Situations", "Special", "Situaciones Especiales"],
   estudiados: ["Watchlist", "Estudiados", "estudiados", "Estudiadas"],
+  swissWatchlist: ["Swiss Watchlist", "Swiss"],
   desarrollo: ["Pipeline", "En desarrollo", "Desarrollo", "En Desarrollo"],
 };
 
@@ -38,6 +41,7 @@ const HEADER_VALIDATORS: Record<TabKey, string[]> = {
   portfolio: ["ticker", "weight", "peso", "company", "empresa"],
   special: ["name", "type", "tender", "expiration", "profit"],
   estudiados: ["ticker", "sector", "company", "empresa"],
+  swissWatchlist: ["ticker", "sector", "company", "empresa"],
   desarrollo: ["status", "priority", "type", "tipo"],
 };
 
@@ -51,6 +55,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
     portfolio: null,
     special: null,
     estudiados: null,
+    swissWatchlist: null,
     desarrollo: null,
   });
 
@@ -135,6 +140,9 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
         )}
         {activeTab === "estudiados" && (
           <EstudiadosTab data={data.estudiados} loading={loading} />
+        )}
+        {activeTab === "swissWatchlist" && (
+          <SwissWatchlistTab data={data.swissWatchlist} loading={loading} />
         )}
         {activeTab === "desarrollo" && (
           <EnDesarrolloTab data={data.desarrollo} loading={loading} />
