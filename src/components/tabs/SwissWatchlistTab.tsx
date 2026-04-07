@@ -124,7 +124,7 @@ export default function SwissWatchlistTab({ data, loading }: Props) {
                   {fcfIdx !== -1 && <td className="hidden px-3 py-3 text-right text-foreground sm:table-cell">{row[fcfIdx] || "—"}</td>}
                   {verdictIdx !== -1 && (
                     <td className="px-3 py-3 text-center">
-                      <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${verdictClass}`}>{verdict || "—"}</span>
+                      <span className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${verdictClass}`}>{verdict || "—"}</span>
                     </td>
                   )}
                   {statusIdx !== -1 && (
