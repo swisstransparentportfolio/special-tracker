@@ -132,6 +132,7 @@ export default function EstudiadosTab({ data, loading }: Props) {
                       <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}`}>{status || "—"}</span>
                     </td>
                   )}
+                  {riskIdx !== -1 && <td className="px-3 py-3 text-center"><RiskBadge value={row[riskIdx]} /></td>}
                   {hasLinks && (
                     <td className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
