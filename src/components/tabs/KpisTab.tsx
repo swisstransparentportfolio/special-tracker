@@ -19,12 +19,12 @@ const tooltipStyle = {
 function FearGreedGauge({ value, label }: { value: number | null; label: string }) {
   if (value === null) return <GaugePlaceholder title="Fear & Greed Index" />;
 
-  const angle = -90 + (value / 100) * 180; // -90 (left) to +90 (right)
+  // Needle goes from left (180°) to right (0°) across the top arc
+  const angle = Math.PI - (value / 100) * Math.PI; // π (left, 0) to 0 (right, 100)
   const needleLength = 80;
   const cx = 120, cy = 110;
-  const rad = (angle * Math.PI) / 180;
-  const nx = cx + needleLength * Math.cos(rad);
-  const ny = cy + needleLength * Math.sin(rad);
+  const nx = cx + needleLength * Math.cos(angle);
+  const ny = cy - needleLength * Math.sin(angle);
 
   // Color based on value
   let color = "hsl(var(--muted-foreground))";
