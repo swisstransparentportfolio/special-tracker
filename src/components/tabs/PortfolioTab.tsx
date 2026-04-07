@@ -120,7 +120,7 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
     <div className="space-y-6 animate-fade-in">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weighted Expected CAGR</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weighted Expected Return</p>
           <p className={`mt-1 font-display text-2xl font-bold ${avgCagr >= 0 ? "text-success" : "text-destructive"}`}>
             {avgCagr >= 0 ? "+" : ""}{avgCagr.toFixed(1)}%
           </p>
