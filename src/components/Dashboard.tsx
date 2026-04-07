@@ -20,6 +20,7 @@ const TABS = [
   { key: "portfolio", label: "Portfolio" },
   { key: "special", label: "Special Situations" },
   { key: "estudiados", label: "Watchlist" },
+  { key: "swissWatchlist", label: "Swiss Watchlist" },
   { key: "desarrollo", label: "Pipeline" },
 ] as const;
 
