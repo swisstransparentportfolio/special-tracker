@@ -75,7 +75,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
 
     // Load sheet data first (fast), then benchmarks in background
     const sheetResults = await Promise.all(
-      (Object.keys(SHEET_NAMES) as AllTabs[]).map(async (tab) => {
+      (Object.keys(SHEET_NAMES) as SheetTab[]).map(async (tab) => {
         for (const name of SHEET_NAMES[tab]) {
           try {
             const sheet = await fetchSheet(sheetId, name);
