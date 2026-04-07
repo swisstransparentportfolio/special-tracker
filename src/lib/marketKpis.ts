@@ -190,7 +190,6 @@ async function fetchMarketKpisLive(): Promise<KpiData> {
     fearGreed: fearGreed.value,
     fearGreedText: fearGreed.text,
     vix,
-    return { data: [] };
     putCallRatio: null,
     sp500WithMA: buildSP500WithMA(sp500Data),
     stockVsBond: buildStockVsBond(sp500Data, bondData),
