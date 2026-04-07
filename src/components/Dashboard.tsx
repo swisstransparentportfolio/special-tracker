@@ -41,6 +41,7 @@ const HEADER_VALIDATORS: Record<TabKey, string[]> = {
   portfolio: ["ticker", "weight", "peso", "company", "empresa"],
   special: ["name", "type", "tender", "expiration", "profit"],
   estudiados: ["ticker", "sector", "company", "empresa"],
+  swissWatchlist: ["ticker", "sector", "company", "empresa"],
   desarrollo: ["status", "priority", "type", "tipo"],
 };
 
