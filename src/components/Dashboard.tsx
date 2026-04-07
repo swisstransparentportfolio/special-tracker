@@ -141,6 +141,9 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
         {activeTab === "estudiados" && (
           <EstudiadosTab data={data.estudiados} loading={loading} />
         )}
+        {activeTab === "swissWatchlist" && (
+          <SwissWatchlistTab data={data.swissWatchlist} loading={loading} />
+        )}
         {activeTab === "desarrollo" && (
           <EnDesarrolloTab data={data.desarrollo} loading={loading} />
         )}
