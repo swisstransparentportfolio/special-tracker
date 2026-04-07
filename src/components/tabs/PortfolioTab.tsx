@@ -94,7 +94,7 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
   });
   const avgCagr = totalWeightWithCagr > 0 ? weightedCagr / totalWeightWithCagr : 0;
   const pctWithTarget = totalWeightWithCagr > 0
-    ? `${((totalWeightWithCagr / activeRows.reduce((s, r) => s + (parseNum(r[weightIdx]) || 0), 0)) * 100).toFixed(1)}% of portfolio with P.O.`
+    ? `${((totalWeightWithCagr / activeRows.reduce((s, r) => s + (parseNum(r[weightIdx]) || 0), 0)) * 100).toFixed(1)}% of portfolio with entry price`
     : "";
 
   let weightedRisk = 0;
