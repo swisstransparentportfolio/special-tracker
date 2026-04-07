@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
-import { fetchMarketKpis, KpiData } from "@/lib/marketKpis";
+import { fetchMarketKpis, getCachedMarketKpis, hasFreshMarketKpis, KpiData } from "@/lib/marketKpis";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, AreaChart, Area, Legend, ReferenceLine,
@@ -251,21 +251,14 @@ const PREFILLED_DATA: KpiData = {
   },
 };
 
-// Module-level cache: once live data is fetched, it persists across tab switches
-let cachedData: KpiData | null = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // refresh live data every 5 minutes
-
 export default function KpisTab() {
-  const [data, setData] = useState<KpiData>(cachedData ?? PREFILLED_DATA);
+  const [data, setData] = useState<KpiData>(() => getCachedMarketKpis() ?? PREFILLED_DATA);
   const [loading, setLoading] = useState(false);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (force = false) => {
     setLoading(true);
     try {
-      const result = await fetchMarketKpis();
-      cachedData = result;
-      cacheTimestamp = Date.now();
+      const result = await fetchMarketKpis({ force });
       setData(result);
     } catch (e) {
       console.error("KPI fetch error:", e);
@@ -275,8 +268,9 @@ export default function KpisTab() {
   }, []);
 
   useEffect(() => {
-    // Skip fetch if cache is fresh
-    if (cachedData && Date.now() - cacheTimestamp < CACHE_TTL) return;
+    const cached = getCachedMarketKpis();
+    if (cached) setData(cached);
+    if (hasFreshMarketKpis()) return;
     loadData();
   }, [loadData]);
 
@@ -295,7 +289,7 @@ export default function KpisTab() {
           <p className="text-xs text-muted-foreground">Key market indicators and sentiment data</p>
         </div>
         <button
-          onClick={loadData}
+          onClick={() => loadData(true)}
           className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
         >
           <RefreshCw className="h-3 w-3" />

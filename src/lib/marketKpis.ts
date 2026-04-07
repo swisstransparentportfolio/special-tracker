@@ -27,25 +27,39 @@ function isRateLimitedResponse(text: string) {
   return normalized.includes("too many requests") || normalized.includes("rate limit") || normalized.includes("limit exceeded");
 }
 
+async function fetchFromProxy(proxyUrl: string): Promise<Response> {
+  const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  if (!res.ok) throw new Error(`Proxy request failed with status ${res.status}`);
+
+  const text = await res.text();
+  if (isRateLimitedResponse(text)) throw new Error("Proxy rate limited");
+
+  return new Response(text, {
+    status: 200,
+    headers: { "Content-Type": res.headers.get("content-type") ?? "application/json" },
+  });
+}
+
 async function fetchWithProxy(url: string): Promise<Response> {
-  try {
-    return await Promise.any(
-      CORS_PROXIES.map(async (makeProxy) => {
-        const res = await fetch(makeProxy(url), { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-        if (!res.ok) throw new Error(`Proxy request failed with status ${res.status}`);
+  return new Promise((resolve, reject) => {
+    let failedRequests = 0;
+    let resolved = false;
 
-        const text = await res.text();
-        if (isRateLimitedResponse(text)) throw new Error("Proxy rate limited");
-
-        return new Response(text, {
-          status: 200,
-          headers: { "Content-Type": res.headers.get("content-type") ?? "application/json" },
+    CORS_PROXIES.forEach((makeProxy) => {
+      fetchFromProxy(makeProxy(url))
+        .then((response) => {
+          if (resolved) return;
+          resolved = true;
+          resolve(response);
+        })
+        .catch(() => {
+          failedRequests += 1;
+          if (failedRequests === CORS_PROXIES.length && !resolved) {
+            reject(new Error("All proxies failed"));
+          }
         });
-      }),
-    );
-  } catch {
-    throw new Error("All proxies failed");
-  }
+    });
+  });
 }
 
 export interface TimeSeriesPoint {
