@@ -204,7 +204,7 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
                       ) : "—"}
                     </td>
                   )}
-                  {ageIdx !== -1 && <td className="hidden px-3 py-3 text-center text-muted-foreground md:table-cell">{row[ageIdx] || "—"}</td>}
+                  {ageIdx !== -1 && <td className="hidden px-3 py-3 text-center text-muted-foreground md:table-cell">{formatAge(row[ageIdx])}</td>}
                   {riskIdx !== -1 && <td className="px-3 py-3 text-center"><RiskBadge value={row[riskIdx]} /></td>}
                   {hasLinks && (
                     <td className="px-3 py-3 text-right">
