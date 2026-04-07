@@ -28,7 +28,9 @@ const TABS = [
 
 type TabKey = typeof TABS[number]["key"];
 
-type AllTabs = TabKey | "movements";
+type SheetTab = Exclude<TabKey, "kpis"> | "movements";
+
+type AllTabs = SheetTab;
 
 const SHEET_NAMES: Record<AllTabs, string[]> = {
   rentabilidad: ["Performance", "Rentabilidad", "rentabilidad", "Returns"],
