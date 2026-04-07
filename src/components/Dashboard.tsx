@@ -8,6 +8,7 @@ import EstudiadosTab from "./tabs/EstudiadosTab";
 import SwissWatchlistTab from "./tabs/SwissWatchlistTab";
 import EnDesarrolloTab from "./tabs/EnDesarrolloTab";
 import SpecialSituationsTab from "./tabs/SpecialSituationsTab";
+import KpisTab from "./tabs/KpisTab";
 import MarketTicker from "./MarketTicker";
 
 interface Props {
@@ -22,13 +23,16 @@ const TABS = [
   { key: "estudiados", label: "Watchlist" },
   { key: "swissWatchlist", label: "Swiss Watchlist" },
   { key: "desarrollo", label: "Pipeline" },
+  { key: "kpis", label: "KPIs" },
 ] as const;
 
 type TabKey = typeof TABS[number]["key"];
 
-type AllTabs = TabKey | "movements";
+type SheetTab = Exclude<TabKey, "kpis"> | "movements";
 
-const SHEET_NAMES: Record<AllTabs, string[]> = {
+type AllTabs = SheetTab;
+
+const SHEET_NAMES: Record<SheetTab, string[]> = {
   rentabilidad: ["Performance", "Rentabilidad", "rentabilidad", "Returns"],
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
   special: ["Special Situations", "Special", "Situaciones Especiales"],
@@ -39,7 +43,7 @@ const SHEET_NAMES: Record<AllTabs, string[]> = {
 };
 
 // Expected header keywords per tab to validate we got the right sheet
-const HEADER_VALIDATORS: Record<AllTabs, string[]> = {
+const HEADER_VALIDATORS: Record<SheetTab, string[]> = {
   rentabilidad: ["period", "portfolio"],
   portfolio: ["ticker", "weight", "peso", "company", "empresa"],
   special: ["name", "type", "tender", "expiration", "profit"],
@@ -54,7 +58,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState("");
   const [benchmarks, setBenchmarks] = useState<any>(null);
-  const [data, setData] = useState<Record<AllTabs, SheetData | null>>({
+  const [data, setData] = useState<Record<SheetTab, SheetData | null>>({
     rentabilidad: null,
     portfolio: null,
     special: null,
@@ -71,7 +75,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
 
     // Load sheet data first (fast), then benchmarks in background
     const sheetResults = await Promise.all(
-      (Object.keys(SHEET_NAMES) as AllTabs[]).map(async (tab) => {
+      (Object.keys(SHEET_NAMES) as SheetTab[]).map(async (tab) => {
         for (const name of SHEET_NAMES[tab]) {
           try {
             const sheet = await fetchSheet(sheetId, name);
@@ -91,7 +95,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
 
     const results: Record<string, SheetData | null> = {};
     sheetResults.forEach(({ tab, sheet }) => { results[tab] = sheet; });
-    setData(results as Record<AllTabs, SheetData | null>);
+    setData(results as Record<SheetTab, SheetData | null>);
     setLoading(false);
 
     // Fetch benchmarks in background (doesn't block UI)
@@ -151,6 +155,9 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
         )}
         {activeTab === "desarrollo" && (
           <EnDesarrolloTab data={data.desarrollo} loading={loading} />
+        )}
+        {activeTab === "kpis" && (
+          <KpisTab />
         )}
       </main>
 
