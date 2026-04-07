@@ -26,12 +26,12 @@ export default function DashboardHeader({ lastUpdate, onRefresh, onLogout, loadi
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="container flex h-14 items-center justify-between gap-2 overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <a href="https://swisstransparentportfolio.substack.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-opacity">
           <img src={logoSp} alt="Swiss Portfolio" className="h-9 w-9 rounded-md object-cover" />
           <h1 className="font-display text-base sm:text-lg font-bold text-foreground whitespace-nowrap">
             Swiss Portfolio
           </h1>
-        </div>
+        </a>
         <div className="flex items-center gap-1.5 sm:gap-2 text-sm text-muted-foreground flex-shrink-0">
           <span className="hidden sm:inline">Updated {lastUpdate}</span>
           <Button
