@@ -48,7 +48,7 @@ function findCol(headers: string[], ...names: string[]): number {
   return -1;
 }
 
-export default function PortfolioTab({ portfolioData, loading }: Props) {
+export default function PortfolioTab({ portfolioData, movementsData, loading }: Props) {
   if (loading) return <LoadingSkeleton />;
   if (!portfolioData || portfolioData.rows.length === 0) return <EmptyState />;
 
