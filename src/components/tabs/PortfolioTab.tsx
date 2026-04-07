@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { FileText, BarChart3, TrendingUp, TrendingDown } from "lucide-react";
 import { useSortableTable } from "@/hooks/use-sortable-table";
 import SortableHeader from "@/components/SortableHeader";
+import RiskBadge from "@/components/RiskBadge";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Props {
