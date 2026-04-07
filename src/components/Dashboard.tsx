@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { fetchSheet, SheetData } from "@/lib/googleSheets";
 import { fetchBenchmarks } from "@/lib/benchmarks";
+import { preloadMarketKpis } from "@/lib/marketKpis";
 import DashboardHeader from "./DashboardHeader";
 import RentabilidadTab from "./tabs/RentabilidadTab";
 import PortfolioTab from "./tabs/PortfolioTab";
@@ -106,6 +107,10 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    preloadMarketKpis();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
