@@ -5,6 +5,7 @@ import DashboardHeader from "./DashboardHeader";
 import RentabilidadTab from "./tabs/RentabilidadTab";
 import PortfolioTab from "./tabs/PortfolioTab";
 import EstudiadosTab from "./tabs/EstudiadosTab";
+import SwissWatchlistTab from "./tabs/SwissWatchlistTab";
 import EnDesarrolloTab from "./tabs/EnDesarrolloTab";
 import SpecialSituationsTab from "./tabs/SpecialSituationsTab";
 import MarketTicker from "./MarketTicker";
