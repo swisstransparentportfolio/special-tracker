@@ -32,7 +32,7 @@ type SheetTab = Exclude<TabKey, "kpis"> | "movements";
 
 type AllTabs = SheetTab;
 
-const SHEET_NAMES: Record<AllTabs, string[]> = {
+const SHEET_NAMES: Record<SheetTab, string[]> = {
   rentabilidad: ["Performance", "Rentabilidad", "rentabilidad", "Returns"],
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
   special: ["Special Situations", "Special", "Situaciones Especiales"],
