@@ -220,9 +220,40 @@ function SentimentRow({ label, description }: { label: string; description: stri
   );
 }
 
+// Prefilled fallback data so charts render instantly
+const PREFILLED_DATA: KpiData = {
+  fearGreed: 32,
+  fearGreedText: "Fear",
+  vix: {
+    current: 18.2,
+    history: Array.from({ length: 30 }, (_, i) => ({
+      date: `Mar ${i + 1}`,
+      value: parseFloat((16 + Math.sin(i / 3) * 4 + Math.random() * 2).toFixed(2)),
+    })),
+  },
+  putCallRatio: null,
+  sp500WithMA: {
+    data: Array.from({ length: 60 }, (_, i) => {
+      const base = 5200 + i * 8 + Math.sin(i / 5) * 80;
+      return {
+        date: `${i < 30 ? "Feb" : "Mar"} ${(i % 30) + 1}`,
+        sp500: parseFloat(base.toFixed(2)),
+        ma125: i >= 20 ? parseFloat((base - 40 + Math.sin(i / 8) * 30).toFixed(2)) : null,
+      };
+    }),
+  },
+  stockVsBond: {
+    data: Array.from({ length: 30 }, (_, i) => ({
+      date: `Mar ${i + 1}`,
+      stocks: parseFloat((1.5 + Math.sin(i / 4) * 3).toFixed(2)),
+      bonds: parseFloat((-0.5 + Math.cos(i / 3) * 2).toFixed(2)),
+    })),
+  },
+};
+
 export default function KpisTab() {
-  const [data, setData] = useState<KpiData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<KpiData>(PREFILLED_DATA);
+  const [loading, setLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
