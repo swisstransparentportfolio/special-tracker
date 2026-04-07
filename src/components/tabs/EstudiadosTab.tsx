@@ -48,6 +48,7 @@ export default function EstudiadosTab({ data, loading }: Props) {
   const statusIdx = getColIdx(headers, "status");
   const thesisIdx = getColIdx(headers, "research");
   const modelIdx = getColIdx(headers, "model");
+  const riskIdx = getColIdx(headers, "risk");
 
   const hasLinks = thesisIdx !== -1 || modelIdx !== -1;
 
