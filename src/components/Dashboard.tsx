@@ -95,7 +95,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
 
     const results: Record<string, SheetData | null> = {};
     sheetResults.forEach(({ tab, sheet }) => { results[tab] = sheet; });
-    setData(results as Record<AllTabs, SheetData | null>);
+    setData(results as Record<SheetTab, SheetData | null>);
     setLoading(false);
 
     // Fetch benchmarks in background (doesn't block UI)
