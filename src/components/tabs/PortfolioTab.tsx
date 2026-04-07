@@ -314,7 +314,7 @@ function PieChartInner({ pieData }: { pieData: { name: string; fullName: string;
         <Pie data={pieData} cx="50%" cy="50%" innerRadius={innerR} outerRadius={outerR} dataKey="value" paddingAngle={1} stroke="none" label={renderCustomLabel(isMobile)} labelLine={false}>
           {pieData.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} className="cursor-pointer transition-opacity hover:opacity-80" />))}
         </Pie>
-        <Tooltip formatter={(v: number, _name: string, props: any) => [`${v.toFixed(1)}%`, props.payload.fullName]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} />
+        <Tooltip formatter={(v: number, _name: string, props: any) => [`${v.toFixed(1)}%`, props.payload.fullName]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12, color: "hsl(var(--foreground))" }} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))" }} />
       </PieChart>
     </ResponsiveContainer>
   );
