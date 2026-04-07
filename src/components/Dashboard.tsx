@@ -156,6 +156,9 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
         {activeTab === "desarrollo" && (
           <EnDesarrolloTab data={data.desarrollo} loading={loading} />
         )}
+        {activeTab === "kpis" && (
+          <KpisTab />
+        )}
       </main>
 
       {/* Footer */}
