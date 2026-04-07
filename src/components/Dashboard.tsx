@@ -55,7 +55,15 @@ const HEADER_VALIDATORS: Record<SheetTab, string[]> = {
 };
 
 export default function Dashboard({ sheetId, onLogout }: Props) {
-  const [activeTab, setActiveTab] = useState<TabKey>("rentabilidad");
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    const saved = localStorage.getItem("sp_active_tab");
+    return TABS.some(t => t.key === saved) ? (saved as TabKey) : "rentabilidad";
+  });
+
+  const handleTabChange = (key: TabKey) => {
+    localStorage.setItem("sp_active_tab", key);
+    setActiveTab(key);
+  };
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState("");
   const [benchmarks, setBenchmarks] = useState<any>(null);
@@ -128,7 +136,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
           {TABS.map(tab => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => handleTabChange(tab.key)}
               className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab.key
                   ? "border-b-2 border-primary text-foreground"
