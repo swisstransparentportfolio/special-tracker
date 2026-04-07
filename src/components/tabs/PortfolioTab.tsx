@@ -263,7 +263,7 @@ function LatestMovements({ data }: { data: SheetData | null }) {
           const change = changeIdx !== -1 ? row[changeIdx]?.trim() : "";
 
           return (
-            <div key={i} className="grid grid-cols-[2.75rem,minmax(0,1fr),auto] items-center gap-x-4 border-b border-border/30 py-3.5 last:border-0 sm:gap-x-6">
+            <div key={i} className="grid grid-cols-[2.75rem,minmax(0,1fr),auto,1rem] items-center gap-x-4 border-b border-border/30 py-3.5 last:border-0 sm:gap-x-6">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center">
                 {isBuy ? (
                   <TrendingUp className="h-5 w-5 text-success" />
@@ -288,6 +288,7 @@ function LatestMovements({ data }: { data: SheetData | null }) {
                   </p>
                 )}
               </div>
+              <div />
             </div>
           );
         })}
