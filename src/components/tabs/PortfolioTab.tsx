@@ -60,8 +60,8 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
   const tickerIdx = findCol(headers, "ticker");
   const weightIdx = findCol(headers, "weight", "peso");
   const priceIdx = findCol(headers, "price", "precio");
-  const targetIdx = findCol(headers, "p.o");
-  const cagrIdx = findCol(headers, "cagr");
+  const targetIdx = findCol(headers, "entry price", "p.o");
+  const cagrIdx = findCol(headers, "total return", "cagr");
   const currencyIdx = findCol(headers, "currency", "moneda");
   const geoIdx = findCol(headers, "geography", "geograf");
   const riskIdx = findCol(headers, "risk", "riesgo");
