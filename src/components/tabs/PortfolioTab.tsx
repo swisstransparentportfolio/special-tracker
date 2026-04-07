@@ -94,7 +94,7 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
   });
   const avgCagr = totalWeightWithCagr > 0 ? weightedCagr / totalWeightWithCagr : 0;
   const pctWithTarget = totalWeightWithCagr > 0
-    ? `${((totalWeightWithCagr / activeRows.reduce((s, r) => s + (parseNum(r[weightIdx]) || 0), 0)) * 100).toFixed(1)}% of portfolio with P.O.`
+    ? `${((totalWeightWithCagr / activeRows.reduce((s, r) => s + (parseNum(r[weightIdx]) || 0), 0)) * 100).toFixed(1)}% of portfolio with entry price`
     : "";
 
   let weightedRisk = 0;
@@ -120,7 +120,7 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
     <div className="space-y-6 animate-fade-in">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weighted Expected CAGR</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weighted Expected Return</p>
           <p className={`mt-1 font-display text-2xl font-bold ${avgCagr >= 0 ? "text-success" : "text-destructive"}`}>
             {avgCagr >= 0 ? "+" : ""}{avgCagr.toFixed(1)}%
           </p>
@@ -161,8 +161,8 @@ export default function PortfolioTab({ portfolioData, movementsData, loading }: 
               {geoIdx !== -1 && <SortableHeader label="Geography" colIdx={geoIdx} sort={sort} onToggle={toggleSort} className="hidden text-left md:table-cell" />}
               {currencyIdx !== -1 && <SortableHeader label="Ccy" colIdx={currencyIdx} sort={sort} onToggle={toggleSort} className="text-center" />}
               {priceIdx !== -1 && <SortableHeader label="Price" colIdx={priceIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
-              {targetIdx !== -1 && <SortableHeader label="P.O. 3Y" colIdx={targetIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
-              {cagrIdx !== -1 && <SortableHeader label="CAGR 3Y" colIdx={cagrIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
+              {targetIdx !== -1 && <SortableHeader label="Entry Price" colIdx={targetIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
+              {cagrIdx !== -1 && <SortableHeader label="Total Return" colIdx={cagrIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
               {weightIdx !== -1 && <SortableHeader label="Weight" colIdx={weightIdx} sort={sort} onToggle={toggleSort} className="text-right" />}
               {detailIdx !== -1 && <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detail</th>}
               {ageIdx !== -1 && <SortableHeader label="Age" colIdx={ageIdx} sort={sort} onToggle={toggleSort} className="hidden text-center md:table-cell" />}
