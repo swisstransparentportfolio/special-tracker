@@ -43,7 +43,7 @@ const SHEET_NAMES: Record<SheetTab, string[]> = {
 };
 
 // Expected header keywords per tab to validate we got the right sheet
-const HEADER_VALIDATORS: Record<AllTabs, string[]> = {
+const HEADER_VALIDATORS: Record<SheetTab, string[]> = {
   rentabilidad: ["period", "portfolio"],
   portfolio: ["ticker", "weight", "peso", "company", "empresa"],
   special: ["name", "type", "tender", "expiration", "profit"],
