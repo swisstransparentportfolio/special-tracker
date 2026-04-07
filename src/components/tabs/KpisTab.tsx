@@ -220,7 +220,7 @@ function SentimentRow({ label, description }: { label: string; description: stri
   );
 }
 
-// Prefilled fallback data so charts render instantly
+// Prefilled fallback data so charts render instantly on first ever visit
 const PREFILLED_DATA: KpiData = {
   fearGreed: 32,
   fearGreedText: "Fear",
@@ -251,14 +251,21 @@ const PREFILLED_DATA: KpiData = {
   },
 };
 
+// Module-level cache: once live data is fetched, it persists across tab switches
+let cachedData: KpiData | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // refresh live data every 5 minutes
+
 export default function KpisTab() {
-  const [data, setData] = useState<KpiData>(PREFILLED_DATA);
+  const [data, setData] = useState<KpiData>(cachedData ?? PREFILLED_DATA);
   const [loading, setLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const result = await fetchMarketKpis();
+      cachedData = result;
+      cacheTimestamp = Date.now();
       setData(result);
     } catch (e) {
       console.error("KPI fetch error:", e);
@@ -268,6 +275,8 @@ export default function KpisTab() {
   }, []);
 
   useEffect(() => {
+    // Skip fetch if cache is fresh
+    if (cachedData && Date.now() - cacheTimestamp < CACHE_TTL) return;
     loadData();
   }, [loadData]);
 
