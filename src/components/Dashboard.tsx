@@ -23,8 +23,8 @@ const TABS = [
   { key: "special", label: "Special Situations" },
   { key: "estudiados", label: "Watchlist" },
   { key: "swissWatchlist", label: "Swiss Watchlist" },
-  { key: "desarrollo", label: "Pipeline" },
   { key: "kpis", label: "KPIs" },
+  { key: "desarrollo", label: "Pipeline" },
 ] as const;
 
 type TabKey = typeof TABS[number]["key"];
