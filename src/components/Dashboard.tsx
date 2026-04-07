@@ -54,13 +54,14 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState("");
   const [benchmarks, setBenchmarks] = useState<any>(null);
-  const [data, setData] = useState<Record<TabKey, SheetData | null>>({
+  const [data, setData] = useState<Record<AllTabs, SheetData | null>>({
     rentabilidad: null,
     portfolio: null,
     special: null,
     estudiados: null,
     swissWatchlist: null,
     desarrollo: null,
+    movements: null,
   });
 
   const loadData = useCallback(async () => {
