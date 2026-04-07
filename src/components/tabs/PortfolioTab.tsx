@@ -1,13 +1,14 @@
 import { SheetData, getColIdx } from "@/lib/googleSheets";
 import { Card } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { FileText, BarChart3 } from "lucide-react";
+import { FileText, BarChart3, TrendingUp, TrendingDown } from "lucide-react";
 import { useSortableTable } from "@/hooks/use-sortable-table";
 import SortableHeader from "@/components/SortableHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Props {
   portfolioData: SheetData | null;
+  movementsData: SheetData | null;
   loading: boolean;
 }
 
@@ -47,7 +48,7 @@ function findCol(headers: string[], ...names: string[]): number {
   return -1;
 }
 
-export default function PortfolioTab({ portfolioData, loading }: Props) {
+export default function PortfolioTab({ portfolioData, movementsData, loading }: Props) {
   if (loading) return <LoadingSkeleton />;
   if (!portfolioData || portfolioData.rows.length === 0) return <EmptyState />;
 
@@ -137,11 +138,14 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
       </div>
 
       {pieData.length > 0 && (
-        <Card className="border-border bg-card p-4 sm:p-5">
-          <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
-          <p className="mb-3 text-xs text-muted-foreground">Click a segment to see details</p>
-          <PieChartInner pieData={pieData} />
-        </Card>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Card className="border-border bg-card p-4 sm:p-5 lg:col-span-2">
+            <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Portfolio Composition</h3>
+            <p className="mb-3 text-xs text-muted-foreground">Click a segment to see details</p>
+            <PieChartInner pieData={pieData} />
+          </Card>
+          <LatestMovements data={movementsData} />
+        </div>
       )}
 
       <Card className="overflow-x-auto border-border bg-card p-4">
@@ -224,6 +228,68 @@ export default function PortfolioTab({ portfolioData, loading }: Props) {
         </table>
       </Card>
     </div>
+  );
+}
+
+function LatestMovements({ data }: { data: SheetData | null }) {
+  if (!data || data.rows.length === 0) {
+    return (
+      <Card className="border-border bg-card p-4 sm:p-5">
+        <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Latest Movements</h3>
+        <p className="text-sm text-muted-foreground">No movements data found. Add a "Movements" tab to your sheet.</p>
+      </Card>
+    );
+  }
+
+  const { headers, rows } = data;
+  const typeIdx = findCol(headers, "type", "tipo");
+  const companyIdx = findCol(headers, "company", "empresa") !== -1 ? findCol(headers, "company", "empresa") : 0;
+  const tickerIdx = findCol(headers, "ticker");
+  const dateIdx = findCol(headers, "date", "fecha");
+  const priceIdx = findCol(headers, "price", "precio");
+  const changeIdx = findCol(headers, "change", "cambio", "variación", "variacion");
+
+  return (
+    <Card className="border-border bg-card p-4 sm:p-5 flex flex-col">
+      <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">Latest Movements</h3>
+      <div className="flex-1 space-y-0 overflow-y-auto max-h-[380px]">
+        {rows.map((row, i) => {
+          const type = typeIdx !== -1 ? row[typeIdx]?.trim().toUpperCase() : "";
+          const isBuy = type === "BUY" || type === "COMPRA";
+          const company = row[companyIdx] || "—";
+          const ticker = tickerIdx !== -1 ? row[tickerIdx]?.trim() : "";
+          const date = dateIdx !== -1 ? row[dateIdx]?.trim() : "";
+          const price = priceIdx !== -1 ? row[priceIdx]?.trim() : "";
+          const change = changeIdx !== -1 ? row[changeIdx]?.trim() : "";
+
+          return (
+            <div key={i} className="flex items-center gap-3 border-b border-border/30 py-2.5 last:border-0">
+              <div className="flex-shrink-0">
+                {isBuy ? (
+                  <TrendingUp className="h-4 w-4 text-success" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-destructive" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{company}</p>
+                <p className="text-xs text-muted-foreground">
+                  {ticker}{ticker && date ? " · " : ""}{date}
+                </p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-sm font-bold text-foreground">{price}</p>
+                {change && (
+                  <p className={`text-xs font-medium ${isBuy ? "text-success" : "text-destructive"}`}>
+                    Δ {change}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
