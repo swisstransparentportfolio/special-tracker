@@ -31,6 +31,7 @@ const SHEET_NAMES: Record<TabKey, string[]> = {
   portfolio: ["Portfolio", "portfolio", "10Bagger", "Cartera", "Posiciones"],
   special: ["Special Situations", "Special", "Situaciones Especiales"],
   estudiados: ["Watchlist", "Estudiados", "estudiados", "Estudiadas"],
+  swissWatchlist: ["Swiss Watchlist", "Swiss"],
   desarrollo: ["Pipeline", "En desarrollo", "Desarrollo", "En Desarrollo"],
 };
 
