@@ -136,7 +136,7 @@ export default function Dashboard({ sheetId, onLogout }: Props) {
           {TABS.map(tab => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => handleTabChange(tab.key)}
               className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab.key
                   ? "border-b-2 border-primary text-foreground"
